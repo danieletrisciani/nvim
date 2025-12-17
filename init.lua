@@ -1,4 +1,7 @@
 
+
+vim.deprecate = function() end
+
 -- set leader key to space
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
@@ -102,14 +105,14 @@ local highlight_group = vim.api.nvim_create_augroup('YankHighlight', { clear = t
   pattern = '*',
 })
 
--- Automatic save after updatetime ms
-vim.api.nvim_create_autocmd("CursorHold", {
-  callback = function()
-    if vim.bo.modifiable and vim.bo.modified then
-      vim.cmd("silent! write")
-    end
-  end,
-})
+-- -- Automatic save after updatetime ms
+-- vim.api.nvim_create_autocmd("CursorHold", {
+--   callback = function()
+--     if vim.bo.modifiable and vim.bo.modified then
+--       vim.cmd("silent! write")
+--     end
+--   end,
+-- })
 
 -- Show diagnostic when the cursor is over a source of errors/warnings
 -- vim.api.nvim_create_autocmd("CursorHold", {
