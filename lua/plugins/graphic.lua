@@ -1,5 +1,5 @@
 return {
-  
+
   -- Provides file-type icons for plugins
   {
     "nvim-tree/nvim-web-devicons",
@@ -61,13 +61,28 @@ return {
 	override = {
 	  ["vim.lsp.util.convert_input_to_markdown_lines"] = true,
 	  ["vim.lsp.util.stylize_markdown"] = true,
-	  ["cmp.entry.get_documentation"] = true, -- optional but recommended
 	},
+	signature = {
+	  enabled = false,
+	  window= {
+	    show_documentation = false
+	  }
+	}
       },
     },
     dependencies = {
       "MunifTanjim/nui.nvim",
       "rcarriga/nvim-notify",
     }
+  },
+  {
+    "chentoast/marks.nvim",
+    event = "VeryLazy",
+    opts = {
+	default_mappings = false,
+    },
+  },
+  {
+    'mrjones2014/smart-splits.nvim',
   }
 }

@@ -23,4 +23,14 @@ return {
       t({"Line 1", "Line 2", "Line 3"})
     }
   ),
+
+  -- s({trig="ff", dscr="Expands 'ff' into '\frac{}{}'"},
+  --   {
+  --     t("\\frac{"),
+  --     i(1),  -- insert node 1
+  --     t("}{"),
+  --     i(2),  -- insert node 2
+  --     t("}")
+  --   }
+  -- ),
 }
