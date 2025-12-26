@@ -27,24 +27,27 @@ return {
       notifier = { enabled = true, timeout = 5000 },
 
       -- The fuzzy finder, and a better vim.ui.select
-      picker = { enabled = true, select = true,
-	layout = { preset = "vscode"},
-	focus = "list",
+      picker = {
+	enabled = true,
+	select = true,
+	layout = { preset = "vscode" },
+	focus = "input", -- start pickers in INSERT mode
       },
 
       -- When doing nvim somefile.txt, it will render the file as quickly as possible.
       quickfile = { enabled = true },
 
-      -- Scope detection, text objects and jumping based on treesitter or indent
-      scope = { enabled = true },
+      -- Add the textobject scope to "ai" and "ii".
+      -- scope = { enabled = true },
 
       -- Smooth scrolling
       scroll = { enabled = true },
 
       -- Pretty status column
-      statuscolumn = { enabled = true },
+      -- statuscolumn = { enabled = true },
+
       -- Auto-show LSP references and quickly navigate between them
-      words = { enabled = true },
+      -- words = { enabled = true },
 
       styles = {
 	notification = {
@@ -78,9 +81,10 @@ return {
       {
 	"<leader>e",
 	function()
-	  
 	  local opts = {}
 
+	  -- If not in a session open the file folder
+	  local session = vim.v.this_session
 	  if session == "" or not session then
 	    opts = {cwd = vim.fn.expand("%:p:h")}
 	  end
@@ -163,6 +167,7 @@ return {
       { "gy", function() Snacks.picker.lsp_type_definitions() end, desc = "Goto T[y]pe Definition" },
       { "gai", function() Snacks.picker.lsp_incoming_calls() end, desc = "C[a]lls Incoming" },
       { "gao", function() Snacks.picker.lsp_outgoing_calls() end, desc = "C[a]lls Outgoing" },
+      { "gm", function() vim.buf.rename() end, desc = "C[a]lls Outgoing" },
       {
 	"<leader>ss",
 	function()
@@ -178,15 +183,13 @@ return {
       { "<leader>.",  function() Snacks.scratch() end, desc = "Toggle Scratch Buffer" },
       { "<leader>S",  function() Snacks.scratch.select() end, desc = "Select Scratch Buffer" },
       { "<leader>n",  function() Snacks.notifier.show_history() end, desc = "Notification History" },
-      { "<leader>bd", function() Snacks.bufdelete() end, desc = "Delete Buffer" },
+      -- { "<leader>bd", function() Snacks.bufdelete() end, desc = "Delete Buffer" },
       { "<leader>cR", function() Snacks.rename.rename_file() end, desc = "Rename File" },
       { "<leader>gB", function() Snacks.gitbrowse() end, desc = "Git Browse", mode = { "n", "v" } },
       { "<leader>gg", function() Snacks.lazygit() end, desc = "Lazygit" },
       { "<leader>un", function() Snacks.notifier.hide() end, desc = "Dismiss All Notifications" },
       { "<c-/>",      function() Snacks.terminal() end, desc = "Toggle Terminal" },
       { "<c-_>",      function() Snacks.terminal() end, desc = "which_key_ignore" },
-      { "]]",         function() Snacks.words.jump(vim.v.count1) end, desc = "Next Reference", mode = { "n", "t" } },
-      { "[[",         function() Snacks.words.jump(-vim.v.count1) end, desc = "Prev Reference", mode = { "n", "t" } },
       {
 	"<leader>N",
 	desc = "Neovim News",

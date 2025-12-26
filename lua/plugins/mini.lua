@@ -9,12 +9,12 @@ return {
       -- add, delete, replace, find, highlight surrounding
       require("mini.surround").setup({
 	mappings = {
-	  add = 'sa', -- Add surrounding in Normal and Visual modes
-	  delete = 'sd', -- Delete surrounding
-	  find = 'sf', -- Find surrounding (to the right)
-	  find_left = 'sF', -- Find surrounding (to the left)
-	  highlight = 'sh', -- Highlight surrounding
-	  replace = 'sr', -- Replace surrounding
+	  add = '<c-s>a', -- Add surrounding in Normal and Visual modes
+	  delete = '<c-s>d', -- Delete surrounding
+	  find = '<c-s>f', -- Find surrounding (to the right)
+	  find_left = '<c-s>F', -- Find surrounding (to the left)
+	  highlight = '<c-s>h', -- Highlight surrounding
+	  replace = '<c-s>r', -- Replace surrounding
 
 	  suffix_last = 'l', -- Suffix to search with "prev" method
 	  suffix_next = 'n', -- Suffix to search with "next" method
