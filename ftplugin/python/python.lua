@@ -1,9 +1,12 @@
 
--- Prevent multiple loading
-if vim.b.did_ftplugin then
-  return
-end
-vim.b.did_ftplugin = true
+-- Disable wrap
+vim.opt.wrap = false
+
+-- PEP 8
+vim.opt.shiftwidth = 4   -- Indentation is 4 spaces
+vim.opt.tabstop = 4      -- Tab = 4 spaces
+vim.opt.softtabstop = 4  -- Backspace remove 4 spaces
+vim.opt.expandtab = true -- Tab uses spaces
 
 -- Path of the file to run
 local file_name = "main.py"

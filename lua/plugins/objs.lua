@@ -2,6 +2,7 @@
 return{
   ---@module 'lazy'
   ---@type LazySpec
+  -- Adds smart, syntax-aware text objects using Tree-sitter.
   {
     "nvim-treesitter/nvim-treesitter-textobjects",
     -- event = "VeryLazy",

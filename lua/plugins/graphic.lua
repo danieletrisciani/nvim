@@ -75,6 +75,8 @@ return {
       "rcarriga/nvim-notify",
     }
   },
+
+  -- Improve how the marks are shown in the signcolumn
   {
     "chentoast/marks.nvim",
     event = "VeryLazy",
@@ -82,6 +84,8 @@ return {
 	default_mappings = false,
     },
   },
+
+  -- Allows neovim to adjust ratio between panes
   {
     'mrjones2014/smart-splits.nvim',
   }
