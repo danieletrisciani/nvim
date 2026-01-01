@@ -42,7 +42,7 @@ vim.o.timeoutlen = 300
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>', {desc = "Clear search highlights"})
 
 -- What is saved in a session
-vim.o.sessionoptions = "buffers,curdir,folds,tabpages,winsize,winpos,terminal,localoptions"
+vim.o.sessionoptions = "blank,buffers,curdir,folds,tabpages,winsize,winpos,terminal,localoptions"
 
 -- Inizialize Lazy and the plugins
 require("config.lazy")
@@ -55,6 +55,13 @@ vim.api.nvim_create_autocmd("User", {
     vim.ui.input = require("snacks.input").input
   end,
 })
+
+-- In insert mode: Shift+Tab per de-indent
+vim.keymap.set('i', '<S-Tab>', '<C-d>', { desc = 'De-indent line' })
+
+-- In normal mode: Tab and Shift-Tab also in normal mode
+vim.keymap.set('n', '<S-Tab>', '<<', { desc = 'De-indent line' })
+vim.keymap.set('n', 'Tab', '>>', { desc = 'De-indent line' })
 
 -- Shortcuts for WezTerm splits
 vim.keymap.set('n', '<A-l>', require('smart-splits').resize_right)
@@ -113,9 +120,9 @@ vim.keymap.set("i", "<A-k>", "<Esc>:m .-2<CR>==gi", { silent = true, desc = "Mov
 vim.keymap.set("v", "<A-j>", ":m '>+1<CR>gv=gv", { silent = true, desc = "Move like down" })
 vim.keymap.set("v", "<A-k>", ":m '<-2<CR>gv=gv", { silent = true, desc = "Move like up" })
 
-vim.keymap.set({"n", "v", "o"}, "<leader>qq", "<cmd>wqa<cr>", {silent = true, desc = "Save all and Quit neovim"})
-vim.keymap.set({"n", "v", "o"}, "<leader>qw", "<cmd>wa<cr>", {silent = true, desc = "Save all and Quit neovim"})
-vim.keymap.set({"n", "v", "o"}, "<leader>qm", "<cmd>qa!<cr>", {silent = true, desc = "Not save and Quit neovim"})
+-- Exit vim
+vim.keymap.set({"n", "v", "o"}, "<leader>q", "<cmd>wqa<cr>", {silent = true, desc = "Save all and Quit neovim"})
+vim.keymap.set({"n", "v", "o"}, "<leader>Q", "<cmd>qa!<cr>", {silent = true, desc = "Not save and Quit neovim"})
 
 -- Put method at the top of the screen
 vim.keymap.set({"n"}, "zn", "[mz<cr>", {silent = true, desc = "Put the screen at the top"})
@@ -128,9 +135,104 @@ vim.keymap.set('n', '<leader>cj', require('treesj').join, {desc="Join node under
 -- Yank the whole screen
 vim.keymap.set('n', '<leader>ce', '<cmd>%y+<cr>', {desc="Yank whole buffer"})
 
--- More confortable mapping for hald page down and up
+-- More confortable mapping for held page down and up
 vim.keymap.set({'n', 'v'}, '<A-i>', '<c-d>', {desc="Yank whole buffer"})
 vim.keymap.set({'n', 'v'}, '<A-o>', '<c-u>', {desc="Yank whole buffer"})
+
+-- Alt+Backspace to delete a work backward
+vim.keymap.set('i', '<M-BS>', '<C-w>', { desc = 'Delete word backward' })
+
+-- Keybindings for managing sessions
+vim.keymap.set({'n', 'v'}, '<leader>fs', function() vim.cmd("SessionManager save_current_session") end, {desc="Save/Create session"})
+vim.keymap.set({'n', 'v'}, '<leader>fl', function() vim.cmd("SessionManager load_current_dir_session") end, {desc="Load session of current cwd"})
+
+-- Open the list of sessions
+vim.keymap.set({'n', 'v'}, '<leader>w', function()
+  require("snacks").picker.pick({
+    title = "Sessions",
+    name = "picker-sessions",
+    finder = function ()
+
+      local utils = require('session_manager.utils')
+      local sessions = utils.get_sessions()
+      local items = {}
+
+      for index, session in ipairs(sessions) do
+	table.insert(items, {
+	  idx = index,
+	  file = utils.shorten_path(session.dir),
+	  text = session.filename,
+	})
+      end
+
+      return items
+    end,
+    -- After pressing enter
+    confirm = function(picker, item)
+      local utils = require('session_manager.utils')
+      local session = require('session_manager')
+      session.save_current_session()
+
+      utils.load_session(item.text, true)
+      picker:close()
+    end,
+    format = "filename",
+    layout = {
+      backdrop = true,
+      hidden = { "preview" },
+      layout = {
+	backdrop = false,
+	row = 3,
+	width = 0.4,
+	min_width = 30,
+	min_height = 2,
+	height = function ()
+	  local sessions = require('session_manager.utils').get_sessions()
+	  return #sessions + 2
+	end,
+	border = true,
+	box = "vertical",
+	title = "{title} {live} {flags}",
+	{ win = "input", height = 1, border = "bottom"},
+	{ win = "list", border = "hpad" },
+      },
+    },
+    icons = {
+      files = {
+	enabled = false,
+      }
+    },
+    formatters = {
+      file = {
+	filename_only = true,
+      }
+    },
+    -- Keys to manipulat the sessions
+    win = {
+      input = {
+        keys = {
+          -- ["<C-x>"] = {"delete_session", mode = { "n", "i" }, desc = "delete session"},
+          -- ["dd"] = {"delete_session", mode = { "n" }, desc = "delete session"},
+        },
+      },
+    },
+    -- Azione quando selezioni
+    -- actions = {
+    -- default = function(picker, item)
+    --   print("Selected: " .. item)
+    -- end,
+    -- },
+  })
+end, {desc="List sessions"})
+
+-- Toogle lualine
+vim.keymap.set('n', '<leader>mb', function()
+  if vim.o.laststatus == 0 then
+    vim.o.laststatus = 3  -- o 2 per statusline per finestra
+  else
+    vim.o.laststatus = 0
+  end
+end, { desc = 'Toggle Lualine' })
 
 -- Diagnostic
 vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Prev diagnostic' })

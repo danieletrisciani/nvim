@@ -1,8 +1,3 @@
--- Prevent multiple loading
-if vim.b.did_ftplugin then
-  return
-end
-vim.b.did_ftplugin = true
 
 -- Mode definitions
 local move_mode = {'n', 'x', 'o'}

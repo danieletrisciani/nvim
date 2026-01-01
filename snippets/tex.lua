@@ -1,4 +1,8 @@
 
+local in_mathzone = function()
+  -- The `in_mathzone` function requires the VimTeX plugin
+  return vim.fn['vimtex#syntax#in_mathzone']() == 1
+end
 
 -- Abbreviations used in this article and the LuaSnip docs
 local ls = require("luasnip")
@@ -13,24 +17,67 @@ local fmta = require("luasnip.extras.fmt").fmta
 local rep = require("luasnip.extras").rep
 
 return {
-  -- Example of a multiline text node
-  s({trig = "(%a+)ff", trigEngine = "pattern", wordTrig = false},
-    fmta( [[<>\frac{<>}{<>}]],
-      {f( function(_, snip) return snip.captures[1] end ),
-	i(1), i(2) })),
-  s({trig = "lines", dscr = "Demo: a text node with three lines."},
-    {
-      t({"Line 1", "Line 2", "Line 3"})
-    }
+  -- \begin{whatever} environment
+  s({trig="bb", snippetType="autosnippet"},
+    fmta(
+[[
+\begin{<>}
+    <>
+\end{<>}
+]],
+      {
+	i(1),
+	i(2),
+	rep(1),  -- this node repeats insert node i(1)
+      }
+    )
   ),
 
-  -- s({trig="ff", dscr="Expands 'ff' into '\frac{}{}'"},
-  --   {
-  --     t("\\frac{"),
-  --     i(1),  -- insert node 1
-  --     t("}{"),
-  --     i(2),  -- insert node 2
-  --     t("}")
-  --   }
-  -- ),
+  -- \begin{equation} environment
+  s({trig="ee", snippetType="autosnippet"},
+    fmta(
+[[
+\begin{equation}
+    <>
+\end{equation}
+]],
+      {
+	i(1),
+      }
+    )
+  ),
+
+  -- \begin{quantikz} environment
+  s({trig="qq", snippetType="autosnippet"},
+    fmta(
+[[
+\begin{quantikz}
+    & <> &
+\end{quantikz}
+]],
+      {
+	i(1),
+      }
+    )
+  ),
+
+  -- \frac{}{}
+  s({trig = "ff", snippetType="autosnippet", condition = in_mathzone},
+    fmta(
+      "\\frac{<>}{<>}",
+      {
+	i(1),
+	i(2),
+      }
+    )
+  ),
+  -- $ ... $
+  s({trig = "ii", snippetType="autosnippet"},
+    fmta(
+      "$<>$",
+      {
+	i(1),
+      }
+    )
+  ),
 }

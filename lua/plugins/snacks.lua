@@ -30,8 +30,52 @@ return {
       picker = {
 	enabled = true,
 	select = true,
-	layout = { preset = "vscode" },
+	layout = {
+	  hidden = { "preview" },
+	  preset = "vscode",
+	  layout = {
+	    row = 3,
+	    width = 0.4,
+	    min_width = 50,
+	    min_height = 9,
+	    height = 0.4,
+	    border = true,
+	    box = "vertical",
+	    title = "{title} {live} {flags}",
+	    { win = "input", height = 1, border = "bottom"},
+	    { win = "list", border = "hpad" },
+	    { win = "preview", title = "{preview}", border = true },
+	  },
+	},
 	focus = "input", -- start pickers in INSERT mode
+	---@param picker snacks.Picker
+	on_change = function(picker)
+	  -- vim.notify(picker:count())
+	end,
+	sources = {
+	  explorer = {
+	    layout = {
+	      preview = "main",
+	      layout = {
+		width = 40,
+		min_width = 40,
+		height = 0,
+		position = "left",
+		border = "none",
+		box = "vertical",
+		{
+		  title = "{live} {flags}",
+		  win = "input",
+		  height = 1,
+		  border = true,
+		  title_pos = "center",
+		},
+		{ win = "list", border = "none" },
+		{ win = "preview", title = "{preview}", height = 0.4, border = "top" },
+	      },
+	    }
+	  }
+	}
       },
 
       -- When doing nvim somefile.txt, it will render the file as quickly as possible.
@@ -83,10 +127,12 @@ return {
 	function()
 	  local opts = {}
 
-	  -- If not in a session open the file folder
 	  local session = vim.v.this_session
 	  if session == "" or not session then
-	    opts = {cwd = vim.fn.expand("%:p:h")}
+	    opts = {
+	      cwd = vim.fn.expand("%:p:h"),
+	      layout = { preset = "sidebar", preview = false }
+	    }
 	  end
 
 	  Snacks.explorer(opts)
@@ -135,7 +181,6 @@ return {
       -- Grep
       { "<leader>sb", function() Snacks.picker.lines({focus = "input"}) end, desc = "Buffer Lines" },
       { "<leader>sB", function() Snacks.picker.grep_buffers({focus = "input"}) end, desc = "Grep Open Buffers" },
-      { "<leader>sg", function() Snacks.picker.grep({focus = "input"}) end, desc = "Grep" },
       { "<leader>sw", function() Snacks.picker.grep_word({focus = "input"}) end, desc = "Visual selection or word", mode = { "n", "x" } },
       -- search
       { '<leader>s"', function() Snacks.picker.registers() end, desc = "Registers" },
@@ -208,10 +253,6 @@ return {
 	  })
 	end,
       },
-      { "<leader>wr", function() vim.cmd("SessionManager load_session") end, desc = "Session search" },
-      { "<leader>ws", function() vim.cmd("SessionManager save_current_session") end, desc = "Save session" },
-      { "<leader>wa", function() vim.cmd("SessionManager load_current_dir_session") end, desc = "Load session of current cwd" },
-      { "<leader>wd", function() vim.cmd("SessionManager delete_session") end, desc = "Session deleter" },
     },
     init = function()
       vim.api.nvim_create_autocmd("User", {

@@ -1,5 +1,7 @@
 ---@module "lazy"
 ---@type LazySpec
+
+-- Provides fast and accurate syntax highlighting, code parsing, and text manipulation using Tree-sitter.
 return {
   'nvim-treesitter/nvim-treesitter',
   lazy = 'VeryLazy',
