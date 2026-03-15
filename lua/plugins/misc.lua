@@ -54,14 +54,14 @@ return {
     end,
   },
   -- Exit insert mode easier
-  {
-    "max397574/better-escape.nvim",
-    config = function()
-      require("better_escape").setup {
-	timeout = 100
-      }
-    end,
-  },
+  -- {
+  --   "max397574/better-escape.nvim",
+  --   config = function()
+  --     require("better_escape").setup {
+  --       timeout = 300
+  --     }
+  --   end,
+  -- },
   -- Autoindent paste text (maybe)
   -- {
   --   "ku1ik/vim-pasta",

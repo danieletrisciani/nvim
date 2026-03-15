@@ -1,9 +1,4 @@
 
-local in_mathzone = function()
-  -- The `in_mathzone` function requires the VimTeX plugin
-  return vim.fn['vimtex#syntax#in_mathzone']() == 1
-end
-
 -- Abbreviations used in this article and the LuaSnip docs
 local ls = require("luasnip")
 local s = ls.snippet

@@ -22,22 +22,44 @@ return {
     "nvim-lualine/lualine.nvim",
     event = "VeryLazy",
     config = function()
+      local function sessions()
+        local session = vim.v.this_session
+        if not session or session == "" then
+          return ""
+        end
+
+        local cwd = vim.fn.getcwd()
+        local last = vim.fn.fnamemodify(cwd, ":t")
+        return last or cwd
+      end
+      local function get_mode_bg()
+        local mode = vim.fn.mode():upper()  -- N, I, V, etc.
+        local hl_name = "lualine_a_" .. (mode == "N" and "normal" or "insert") -- expand for other modes
+        local ok, hl = pcall(vim.api.nvim_get_hl_by_name, hl_name, true)
+        if ok then
+          return { fg = string.format("#%06x", hl.foreground), bg = string.format("#%06x", hl.background) }
+        else
+          return { fg = "#ffffff", bg = "#000000" }
+        end
+      end
       require("lualine").setup({
-	sections = {
-	  lualine_c = {'buffers'},
-	  lualine_x = {
-	    function()
-	      local session = vim.v.this_session
-	      if session == "" or not session then
-		return ""
-	      end
-	      local path = vim.fn.getcwd()
-	      -- Get the name of last folder
-	      local last_component = vim.fn.fnamemodify(path, ":t")
-	      return last_component or path
-	    end,
-	  },
-	},
+        options = {
+          theme = "auto",       -- or "gruvbox", "tokyonight", etc.
+          globalstatus = true,  -- use global statusline
+        },
+        -- disabled_filetypes = {
+        --   statusline = { "tex" },
+        -- },
+        sections = {
+          lualine_b = { "buffers" },
+          lualine_c = {},
+          lualine_x = { sessions},
+          -- lualine_y = {},
+        },
+        inactive_sections = {
+          lualine_c = { "buffers" },
+          lualine_x = { sessions },
+        },
       })
     end,
   },
@@ -88,5 +110,5 @@ return {
   -- Allows neovim to adjust ratio between panes
   {
     'mrjones2014/smart-splits.nvim',
-  }
+  },
 }

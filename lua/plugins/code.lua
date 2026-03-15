@@ -20,7 +20,7 @@ return {
 
       -- 2. Manually trigger the loader for your custom paths
       require("luasnip.loaders.from_lua").lazy_load({
-	paths = { vim.fn.stdpath("config") .. "/snippets" }
+        paths = { vim.fn.stdpath("config") .. "/snippets" }
       })
     end,
   },
@@ -31,11 +31,11 @@ return {
     lazy = false,
     opts = {
       ui = {
-	icons = {
-	  package_installed = "✓",
-	  package_pending = "➜",
-	  package_uninstalled = "✗"
-	}
+        icons = {
+          package_installed = "✓",
+          package_pending = "➜",
+          package_uninstalled = "✗"
+        }
       }
     }
   },
@@ -46,7 +46,7 @@ return {
     lazy = false,
     opts = {
       auto_install = true,
-      ensure_installed = {"pyright", "ruff", "lua_ls"}
+      ensure_installed = { "pyright", "ruff", "lua_ls"}
     },
   },
 
@@ -62,85 +62,94 @@ return {
     config = function()
 
       local on_attach = function(_, _)
-	vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, {})
+        vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, {})
       end
 
+      --      capabilities = vim.tbl_deep_extend(
+      -- "force",
+      -- capabilities,
+      -- require("cmp_nvim_lsp").default_capabilities()
+      --      )
       local capabilities = vim.lsp.protocol.make_client_capabilities()
-	--      capabilities = vim.tbl_deep_extend(
-	-- "force",
-	-- capabilities,
-	-- require("cmp_nvim_lsp").default_capabilities()
-	--      )
       vim.lsp.config('*', {
-	on_attach = on_attach,
-	capabilities = capabilities,
-	settings = { Lua = { completion = { callSnippet = "Replace", enable = true } } },
+        on_attach = on_attach,
+        capabilities = capabilities,
+        settings = { Lua = { completion = { callSnippet = "Replace", enable = true } } },
       })
 
-      local on_attach_pyright = function(client, _)
+      local on_attach_pyright = function(client, bufnr)
 
-	-- Enable hoverProvider
-	client.server_capabilities.hoverProvider = true
+        -- Enable hoverProvider
+        client.server_capabilities.hoverProvider = true
+        client.server_capabilities.publishDiagnostics = false
+        -- Clear diagnostics from Pyright on this buffer
+        vim.diagnostic.reset(vim.lsp.diagnostic.get_namespace(client.id), bufnr)
+        -- Prevent future diagnostics from Pyright
       end
 
       -- Configure pyright
       vim.lsp.config("pyright", {
-	on_attach = on_attach_pyright,
-	capabilities = (function()
-	  local capabilities = vim.lsp.protocol.make_client_capabilities()
-	  capabilities.textDocument.publishDiagnostics.tagSupport.valueSet = { 2 }
-	  return capabilities
-	end)(),
-	settings = {
-	  python = {
-	    analysis = {
-	      useLibraryCodeForTypes = true,
-	      diagnosticSeverityOverrides = {
-		reportUnusedVariable = "warning",
-	      },
-	      typeCheckingMode = "off", -- Set type-checking mode to off
-	      diagnosticMode = "off", -- Disable diagnostics entirely
-	    },
-	  },
-	},
+
+        on_attach = on_attach_pyright,
+        capabilities = (function()
+          local _capabilities = vim.lsp.protocol.make_client_capabilities()
+          _capabilities.textDocument.publishDiagnostics.tagSupport.valueSet = { 2 }
+          return _capabilities
+        end)(),
+        settings = {
+          python = {
+            analysis = {
+              useLibraryCodeForTypes = true,
+              diagnosticSeverityOverrides = {
+                reportUnusedVariable = "none",
+                reportUndefinedVariable = "none"
+              },
+              typeCheckingMode = "off", -- Set type-checking mode to off
+              diagnosticMode = "openFilesOnly", -- Disable diagnostics entirely
+            },
+          },
+        },
       })
 
       local on_attach_ruff = function(client, _)
-	if client.name == "ruff" then
-	  -- disable hover in favor of pyright
-	  client.server_capabilities.hoverProvider = false
-	end
+        if client.name == "ruff" then
+          -- disable hover in favor of pyright
+          client.server_capabilities.hoverProvider = false
+        end
       end
 
       vim.lsp.config("ruff", {
-	on_attach = on_attach_ruff,
-	init_options = {
-	  settings = {
-	    args = {
-	      "--ignore",
-	      "F821",
-	      "--ignore",
-	      "E402",
-	      "--ignore",
-	      "E722",
-	      "--ignore",
-	      "E712",
-	    },
-	  },
-	},
+        on_attach = on_attach_ruff,
+        init_options = {
+          settings = {
+            args = {
+              "--ignore", "F821", -- undefined name
+              "--ignore", "E402", -- module level import not at top of file
+              "--ignore", "E722", -- do not use bare except: (catch-all exceptions)
+              "--ignore", "E712", -- comparison to True/False using ==
+            },
+          },
+        },
+      })
+
+      vim.diagnostic.config({
+        virtual_text = false, -- End of line diagnostics
+        signs = true,
+        update_in_insert = false,
+        severity_sort = true,
       })
 
       vim.lsp.config("lua_ls", {
-	settings = { Lua = { diagnostics = { globals = { "vim", "Snacks" } } } }
+        settings = { Lua = { diagnostics = { globals = { "vim", "Snacks" } } } }
       })
-	--
-	--      vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {
-	-- border = "rounded",
-	-- width = 70,
-	-- height = 15,
-	--      })
-	--      vim.lsp.handlers["textDocument/signatureHelp"] =
-	--      vim.lsp.with(vim.lsp.handlers.signature_help, { border = "rounded" })
+      --
+      --      vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {
+      -- border = "rounded",
+      -- width = 70,
+      -- height = 15,
+      --      })
+      --      vim.lsp.handlers["textDocument/signatureHelp"] =
+      --      vim.lsp.with(vim.lsp.handlers.signature_help, { border = "rounded" })
 
     end,
   },
@@ -152,15 +161,15 @@ return {
     ---@type Flash.Config
     opts = {
       jump = {
-	nohlsearch = true,
-	autojump = true,
+        nohlsearch = true,
+        autojump = true,
       },
       modes = {
-	char = {
-	  enabled = false,
-	  autohide = true,
-	  highlight = { backdrop = false },
-	},
+        char = {
+          enabled = false,
+          autohide = true,
+          highlight = { backdrop = false },
+        },
       },
     },
     keys = {
@@ -176,25 +185,53 @@ return {
     'saghen/blink.cmp',
     event = 'VimEnter',
     version = '1.*',
+    dependencies = {
+      {
+        "micangl/cmp-vimtex",
+        dependencies = {
+          {
+            "saghen/blink.compat",
+            version = "*",
+            lazy = true,
+            opts = {},
+          },
+        },
+      },
+    },
     --- @module 'blink.cmp'
     --- @type blink.cmp.Config
     opts = {
       keymap = {
-	preset = 'super-tab',
+        preset = 'default',
+        ['<S-Tab>'] = { 'select_prev', 'snippet_backward', 'fallback' },
+        ['<Tab>'] = { 'select_next', 'snippet_forward', 'fallback' },
+        ["<CR>"] = { "accept", "fallback" },
+        ["<Esc>"] = { "hide", "fallback" },
       },
 
       appearance = {
-	nerd_font_variant = 'mono',
+        nerd_font_variant = 'mono',
       },
 
       completion = {
-	-- By default, you may press `<c-space>` to show the documentation.
-	-- Optionally, set `auto_show = true` to show the documentation after a delay.
-	documentation = { auto_show = false, auto_show_delay_ms = 500 },
+        -- By default, you may press `<c-space>` to show the documentation.
+        -- Optionally, set `auto_show = true` to show the documentation after a delay.
+        documentation = {
+          auto_show = false,
+          auto_show_delay_ms = 500,
+        },
       },
 
       sources = {
-	default = { 'lsp', 'buffer', 'snippets', 'path' },
+        -- default = { 'lsp', 'buffer', 'snippets', 'path'},
+        default = { 'lsp', 'buffer', 'snippets', 'path', 'vimtex', 'omni' },
+        providers = {
+          vimtex = {
+            name = "vimtex",
+            module = "blink.compat.source",
+            score_offset = 100,
+          },
+        },
       },
 
       snippets = { preset = 'luasnip' },
@@ -213,10 +250,10 @@ return {
     config = function()
       local null_ls = require("null-ls")
       null_ls.setup({
-	sources = {
-	  -- null_ls.builtins.formatting.black,
-	  -- null_ls.builtins.diagnostics.ruff,
-	},
+        sources = {
+          -- null_ls.builtins.formatting.black,
+          -- null_ls.builtins.diagnostics.ruff,
+        },
       })
     end,
   },
@@ -253,17 +290,17 @@ return {
 
       -- add, delete, replace, find, highlight surrounding
       require("mini.surround").setup({
-	mappings = {
-	  add = '<c-s>a', -- Add surrounding in Normal and Visual modes
-	  delete = '<c-s>d', -- Delete surrounding
-	  find = '<c-s>f', -- Find surrounding (to the right)
-	  find_left = '<c-s>F', -- Find surrounding (to the left)
-	  highlight = '<c-s>h', -- Highlight surrounding
-	  replace = '<c-s>r', -- Replace surrounding
+        mappings = {
+          add = '<c-s>a', -- Add surrounding in Normal and Visual modes
+          delete = '<c-s>d', -- Delete surrounding
+          find = '<c-s>f', -- Find surrounding (to the right)
+          find_left = '<c-s>F', -- Find surrounding (to the left)
+          highlight = '<c-s>h', -- Highlight surrounding
+          replace = '<c-s>r', -- Replace surrounding
 
-	  suffix_last = 'l', -- Suffix to search with "prev" method
-	  suffix_next = 'n', -- Suffix to search with "next" method
-	},
+          suffix_last = 'l', -- Suffix to search with "prev" method
+          suffix_next = 'n', -- Suffix to search with "next" method
+        },
       })
 
       -- automatic highlighting of word under cursor

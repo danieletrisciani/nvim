@@ -18,8 +18,8 @@ return{
     config = function()
       local ts_repeat_move = require("nvim-treesitter-textobjects.repeatable_move")
 
-      vim.keymap.set({ "n", "x", "o" }, ";", ts_repeat_move.repeat_last_move_next)
-      vim.keymap.set({ "n", "x", "o" }, ",", ts_repeat_move.repeat_last_move_previous)
+      vim.keymap.set({ "n", "x", "o" }, ";", ts_repeat_move.repeat_last_move)
+      vim.keymap.set({ "n", "x", "o" }, ",", ts_repeat_move.repeat_last_move_opposite)
 
       -- Optionally, make builtin f, F, t, T also repeatable with ; and ,
       vim.keymap.set({ "n", "x", "o" }, "f", ts_repeat_move.builtin_f_expr, { expr = true })
@@ -31,14 +31,14 @@ return{
     -- Settings
     opts = {
       move = {
-	enable = true,
-	set_jumps = true,
+        enable = true,
+        set_jumps = true,
       },
       swap = {
-	enable = true,
+        enable = true,
       },
       select = {
-	lookahead = true,
+        lookahead = true,
       }
     },
   },
