@@ -19,13 +19,14 @@ local function run()
     file_path = vim.fn.getcwd() .. "/main.py"
   end
 
-  local print_name = "Executing python " .. file_name
-  local echo = "echo '" .. print_name .. "\\n';"
+  local comm = 'wezterm cli split-pane --right --percent 40 -- zsh -c '
+  local echo = "echo '\\e[32mPython " .. file_name .. "\\e[0m \\n';"
   local env = "source ~/Documents/qe/bin/activate;"
   local py = "python " .. file_path .. ";"
-  local comm = '!wezterm cli split-pane --right -- zsh -c '
-  local tot_comm = comm .. '"'.. echo .. env .. py .. 'read"'
-  vim.cmd(tot_comm)
+  local last = "echo '\\n\\e[32mEnd \\e[0m' ;"
+  local tot_comm = comm .. '"'.. echo .. env .. py .. last .. 'read"'
+  -- vim.cmd(tot_comm)
+  os.execute(tot_comm)
 
 end
 

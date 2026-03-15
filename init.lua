@@ -1,4 +1,10 @@
 
+local hitex = 'echo synIDattr(synID(line("."), col("."), 1), "name")'
+vim.api.nvim_create_user_command("Hig", hitex, {})
+local py_proj = vim.fn.expand("~/Projects/")
+local tex_proj = vim.fn.expand("~/Texdocs/")
+local temp_folder = vim.fn.expand("~/.config/nvim/templates/")
+
 -- START OF init.lua --
 -- set leader key to space
 vim.g.mapleader = ' '
@@ -42,7 +48,42 @@ vim.o.timeoutlen = 300
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>', {desc = "Clear search highlights"})
 
 -- What is saved in a session
-vim.o.sessionoptions = "blank,buffers,curdir,folds,tabpages,winsize,winpos,terminal,localoptions"
+vim.o.sessionoptions = "buffers,curdir,folds,tabpages,winsize,winpos,terminal"
+
+-- Creates a new project
+vim.keymap.set('n', '<leader>mn', function()
+  vim.ui.select(
+    { 'Python', 'Latex' },
+    {
+      prompt = 'New Project:',
+    },
+    function(choice)
+      if not choice then return end
+      local parent = nil
+      local template = nil
+      if choice == 'Latex' then
+        parent = tex_proj
+        template = "main.tex"
+      elseif choice == 'Python' then
+        parent = py_proj
+        template = "main.py"
+      end
+      local file = nil
+      vim.ui.input({prompt='Project Name: '},
+        function(file)
+          if file == "" or not file then return end
+          local folder = parent .. file
+          vim.notify("New folder: " .. folder)
+          vim.fn.mkdir(folder, 'p')
+          vim.fn.system({ "cp", temp_folder .. template, folder })
+          vim.cmd.cd(folder)
+          vim.cmd("%bd!")
+          vim.cmd("edit " .. template)
+        end
+      )
+    end
+  )
+end, { desc = "New Project" })
 
 -- Inizialize Lazy and the plugins
 require("config.lazy")
@@ -55,6 +96,9 @@ vim.api.nvim_create_autocmd("User", {
     vim.ui.input = require("snacks.input").input
   end,
 })
+
+-- Disable VimTex mappings
+-- vim.g.vimtex_mappings_enabled = 0
 
 -- In insert mode: Shift+Tab per de-indent
 vim.keymap.set('i', '<S-Tab>', '<C-d>', { desc = 'De-indent line' })
@@ -81,7 +125,7 @@ vim.keymap.set('n', '<BS>', '<C-^>', { desc = 'Toggle last buffer' })
 
 vim.keymap.set('n', '<leader>bb', '<cmd>w<cr>', { desc = 'Save buffer' })
 vim.keymap.set('n', '<leader>bc', '<cmd>bp|bd #<cr>', { desc = 'Close current buffer' })
-vim.keymap.set('n', '<leader>ba', '<cmd>%bd|e#|bd#<cr>', { desc = 'Close buffers except current' })
+vim.keymap.set('n', '<leader>ba', '<cmd>%bd|e#|bd#<cr>|\'"', { desc = 'Close buffers except current' })
 vim.keymap.set('n', '<leader>bn', function ()
   vim.ui.input(
   { prompt = "New buffer name: " },
@@ -133,7 +177,7 @@ vim.keymap.set('n', '<leader>cs', require('treesj').split, {desc="Split node und
 vim.keymap.set('n', '<leader>cj', require('treesj').join, {desc="Join node under cursor"})
 
 -- Yank the whole screen
-vim.keymap.set('n', '<leader>ce', '<cmd>%y+<cr>', {desc="Yank whole buffer"})
+vim.keymap.set('n', '<leader>cy', '<cmd>%y+<cr>', {desc="Yank whole buffer"})
 
 -- More confortable mapping for held page down and up
 vim.keymap.set({'n', 'v'}, '<A-i>', '<c-d>', {desc="Yank whole buffer"})
@@ -145,6 +189,19 @@ vim.keymap.set('i', '<M-BS>', '<C-w>', { desc = 'Delete word backward' })
 -- Keybindings for managing sessions
 vim.keymap.set({'n', 'v'}, '<leader>fs', function() vim.cmd("SessionManager save_current_session") end, {desc="Save/Create session"})
 vim.keymap.set({'n', 'v'}, '<leader>fl', function() vim.cmd("SessionManager load_current_dir_session") end, {desc="Load session of current cwd"})
+
+-- Toggle concealing
+vim.keymap.set("n", '<leader>uc', function ()
+  if vim.wo.conceallevel == 2 then
+    vim.wo.conceallevel = 0
+    vim.notify("Conceal ON")
+  else
+    vim.wo.conceallevel = 2
+    vim.notify("Conceal OFF")
+  end
+end, {
+  desc = 'Toogle Concealing',
+})
 
 -- Open the list of sessions
 vim.keymap.set({'n', 'v'}, '<leader>w', function()
@@ -171,6 +228,7 @@ vim.keymap.set({'n', 'v'}, '<leader>w', function()
     confirm = function(picker, item)
       local utils = require('session_manager.utils')
       local session = require('session_manager')
+      vim.cmd('wa')
       session.save_current_session()
 
       utils.load_session(item.text, true)
@@ -263,9 +321,15 @@ local highlight_group = vim.api.nvim_create_augroup('YankHighlight', { clear = t
   pattern = '*',
 })
 
--- Automatic save after updatetime ms
+-- Automatic save
 vim.api.nvim_create_autocmd("CursorHold", {
   callback = function()
+    -- Check if it's a LaTeX file
+    if vim.bo.filetype == "tex" then
+      return
+    end
+
+    -- Save only if the buffer is modifiable and has unsaved changes
     if vim.bo.modifiable and vim.bo.modified then
       vim.cmd("silent! write")
     end
@@ -284,11 +348,37 @@ vim.api.nvim_create_autocmd({ "BufWritePre" }, {
   end,
 })
 
+-- Adds a colored line after the context line
 vim.cmd([[
   hi TreesitterContextBottom gui=underline guisp=Grey
   "hi TreesitterContextLineNumberBottom gui=underline guisp=Grey
 ]])
 
+-- We wrap this in a ColorScheme autocommand so it doesn't get 
+-- overwritten when your theme loads.
+vim.api.nvim_create_autocmd("ColorScheme", {
+  pattern = "*",
+  callback = function()
+    -- Change 'fg' to whatever hex code you prefer
+    -- 'bold = true' helps make structure stand out
+    vim.api.nvim_set_hl(0, "texCmdEnv", { fg = "#8ec07c", bold = true })
+  end,
+})
+
+--- Refocus terminal after VimTeX inverse search (macOS) ---
+local function tex_focus_nvim()
+  vim.fn.system({ "open", "-a", "WezTerm" }) -- change if needed
+  vim.cmd("redraw!")
+end
+
+vim.api.nvim_create_augroup("vimtex_event_focus", { clear = true })
+
+vim.api.nvim_create_autocmd("User", {
+  group = "vimtex_event_focus",
+  pattern = "VimtexEventViewReverse",
+  callback = tex_focus_nvim,
+})
+---
 -- Show diagnostic when the cursor is over a source of errors/warnings
 -- vim.api.nvim_create_autocmd("CursorHold", {
 --   buffer = bufnr,
