@@ -264,7 +264,12 @@ return {
     dependencies = { 'nvim-treesitter/nvim-treesitter' },
     opts = {
       use_default_keymaps = false,
-    }
+      -- disable the plugin for latex
+      langs = {
+        latex = {
+        },
+      },
+    },
   },
 
   -- Sofisticated commenting (To fix for textobjects)
