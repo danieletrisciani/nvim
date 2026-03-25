@@ -4,6 +4,11 @@ local in_mathzone = function()
   return vim.fn['vimtex#syntax#in_mathzone']() == 1
 end
 
+local out_mathzone = function()
+  -- The `in_mathzone` function requires the VimTeX plugin
+  return vim.fn['vimtex#syntax#in_mathzone']() == 0
+end
+
 local in_quantikz = function()
   -- The `in_mathzone` function requires the VimTeX plugin
   local dct = vim.fn['vimtex#env#get_inner']()
@@ -23,10 +28,11 @@ local fmta = require("luasnip.extras.fmt").fmta
 local rep = require("luasnip.extras").rep
 
 return {
-  --- Snippets for environment creation ---
+
   -- \begin{whatever} environment
   s({trig="bb", snippetType="autosnippet"},
     fmta(
+      --- Snippets for environment creation ---
 [[
 \begin{<>}
   <>
@@ -96,7 +102,21 @@ return {
   ),
 
   -- \begin{enumerate}
-  s({trig = "nm", snippetType="autosnippet"},
+  s({trig = "tm", snippetType="autosnippet", condition = out_mathzone},
+    fmta(
+[[
+\begin{itemize}
+  \item <>
+\end{itemize}
+]],
+      {
+        i(1),
+      }
+    )
+  ),
+
+  -- \begin{enumerate}
+  s({trig = "nm", snippetType="autosnippet", condition = out_mathzone},
     fmta(
 [[
 \begin{enumerate}
@@ -131,7 +151,7 @@ return {
   ),
 
   -- \ref{}
-  s({trig = "bf", snippetType="autosnippet"},
+  s({trig = "bf", snippetType="autosnippet", condition = out_mathzone},
     fmta(
       "\\ref{<>}",
       {
@@ -179,6 +199,30 @@ return {
       {
         i(1),
       }
+    )
+  ),
+
+  -- \bmod
+  s({trig = "bmd", snippetType="autosnippet", condition = in_mathzone},
+    fmta(
+      "\\bmod",
+      { }
+    )
+  ),
+
+  -- \omega
+  s({trig = "mg", snippetType="autosnippet", condition = in_mathzone},
+    fmta(
+      "\\omega",
+      { }
+    )
+  ),
+
+  -- \times
+  s({trig = "tms", snippetType="autosnippet", condition = in_mathzone},
+    fmta(
+      "\\otimes",
+      { }
     )
   ),
 
