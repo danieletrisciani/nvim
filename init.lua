@@ -1,11 +1,19 @@
 
+-- Create a command to show the highlight group for the element under the cursor. 
 local hitex = 'echo synIDattr(synID(line("."), col("."), 1), "name")'
 vim.api.nvim_create_user_command("Hig", hitex, {})
-local py_proj = vim.fn.expand("~/Projects/")
-local tex_proj = vim.fn.expand("~/Texdocs/")
+
+-- Default folders for new projects
+local pr_folder = vim.fn.expand("~/cloud/Projects/") -- Programming language projects
+local tex_folder = vim.fn.expand("~/cloud/Texdocs/") -- Latex projects
+
+-- Template projects
 local temp_folder = vim.fn.expand("~/.config/nvim/templates/")
 
--- START OF init.lua --
+---- START OF init.lua ----
+-- User defined global variables --
+vim.g.auto_save = true
+
 -- set leader key to space
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
@@ -50,40 +58,47 @@ vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>', {desc = "Clear search highli
 -- What is saved in a session
 vim.o.sessionoptions = "buffers,curdir,folds,tabpages,winsize,winpos,terminal"
 
--- Creates a new project
-vim.keymap.set('n', '<leader>mn', function()
-  vim.ui.select(
-    { 'Python', 'Latex' },
-    {
-      prompt = 'New Project:',
-    },
-    function(choice)
-      if not choice then return end
-      local parent = nil
-      local template = nil
-      if choice == 'Latex' then
-        parent = tex_proj
-        template = "main.tex"
-      elseif choice == 'Python' then
-        parent = py_proj
-        template = "main.py"
-      end
-      local file = nil
-      vim.ui.input({prompt='Project Name: '},
-        function(file)
-          if file == "" or not file then return end
-          local folder = parent .. file
-          vim.notify("New folder: " .. folder)
-          vim.fn.mkdir(folder, 'p')
-          vim.fn.system({ "cp", temp_folder .. template, folder })
-          vim.cmd.cd(folder)
-          vim.cmd("%bd!")
-          vim.cmd("edit " .. template)
-        end
-      )
-    end
-  )
-end, { desc = "New Project" })
+local function NewProject(choice)
+  local config = {
+    Latex = { parent = tex_folder, template = "main.tex" },
+    Python = { parent = pr_folder, template = "main.py" },
+    Cpp = { parent = pr_folder, template = "main.cpp" },
+  }
+
+  local alias = {
+    Latex = "Latex",
+    Python = "Python",
+    Cpp = "C++",
+  }
+
+  local selected = config[choice]
+  if not selected then return end
+
+  vim.ui.input({ prompt = alias[choice] .. ' Project Name: ' }, function(name)
+    if not name or name == "" then return end
+
+    -- Define local variables so they don't leak
+    local folder = selected.parent .. name
+    local template = selected.template
+
+    vim.notify("Creating " .. choice .. " project: " .. name)
+
+    vim.fn.mkdir(folder, 'p')
+    -- Use the template folder variable you defined at the top of your init.lua
+    vim.fn.system({ "cp", temp_folder .. template, folder .. "/" .. template })
+
+    vim.cmd.cd(folder)
+    -- Be careful with %bd! - it closes everything else
+    vim.cmd("%bd!")
+    vim.cmd("edit " .. template)
+  end)
+end
+
+-- Use a wrapper function so these ONLY run when you press the keys
+vim.keymap.set('n', '<leader>mn', function () end, { desc = "New project" })
+vim.keymap.set('n', '<leader>mnp', function() NewProject("Python") end, { desc = " Python project" })
+vim.keymap.set('n', '<leader>mnl', function() NewProject("Latex") end, { desc = " Latex project" })
+vim.keymap.set('n', '<leader>mnc', function() NewProject("Cpp") end, { desc = " C++ project" })
 
 -- Inizialize Lazy and the plugins
 require("config.lazy")
@@ -97,8 +112,15 @@ vim.api.nvim_create_autocmd("User", {
   end,
 })
 
+local wk = require("which-key")
+
+wk.add({
+  -- The Group (The folder)
+  { "<leader>mn", group = "New Project" },
+})
+
 -- Disable VimTex mappings
--- vim.g.vimtex_mappings_enabled = 0
+vim.g.vimtex_mappings_enabled = 0
 
 -- In insert mode: Shift+Tab per de-indent
 vim.keymap.set('i', '<S-Tab>', '<C-d>', { desc = 'De-indent line' })
@@ -128,15 +150,15 @@ vim.keymap.set('n', '<leader>bc', '<cmd>bp|bd #<cr>', { desc = 'Close current bu
 vim.keymap.set('n', '<leader>ba', '<cmd>%bd|e#|bd#<cr>|\'"', { desc = 'Close buffers except current' })
 vim.keymap.set('n', '<leader>bn', function ()
   vim.ui.input(
-  { prompt = "New buffer name: " },
-  function(input)
-    if input == nil or input == '' then
-      return
+    { prompt = "New buffer name: " },
+    function(input)
+      if input == nil or input == '' then
+        return
+      end
+      vim.cmd("edit " .. vim.fn.fnameescape(input))
+      print("You entered:", input)
     end
-    vim.cmd("edit " .. vim.fn.fnameescape(input))
-    print("You entered:", input)
-  end
-)
+  )
 end, { desc = 'New buffer' })
 
 -- Keybinding to navigate among splits
@@ -200,8 +222,8 @@ vim.keymap.set("n", '<leader>uc', function ()
     vim.notify("Conceal OFF")
   end
 end, {
-  desc = 'Toogle Concealing',
-})
+    desc = 'Toogle Concealing',
+  })
 
 -- Open the list of sessions
 vim.keymap.set({'n', 'v'}, '<leader>w', function()
@@ -215,11 +237,11 @@ vim.keymap.set({'n', 'v'}, '<leader>w', function()
       local items = {}
 
       for index, session in ipairs(sessions) do
-	table.insert(items, {
-	  idx = index,
-	  file = utils.shorten_path(session.dir),
-	  text = session.filename,
-	})
+        table.insert(items, {
+          idx = index,
+          file = utils.shorten_path(session.dir),
+          text = session.filename,
+        })
       end
 
       return items
@@ -228,41 +250,44 @@ vim.keymap.set({'n', 'v'}, '<leader>w', function()
     confirm = function(picker, item)
       local utils = require('session_manager.utils')
       local session = require('session_manager')
-      vim.cmd('wa')
+      vim.cmd('wa') -- Save current changes
       session.save_current_session()
+      picker:close() -- Close the UI
 
-      utils.load_session(item.text, true)
-      picker:close()
+      vim.schedule(function()
+        utils.load_session(item.text, true)
+      end)
+
     end,
     format = "filename",
     layout = {
       backdrop = true,
       hidden = { "preview" },
       layout = {
-	backdrop = false,
-	row = 3,
-	width = 0.4,
-	min_width = 30,
-	min_height = 2,
-	height = function ()
-	  local sessions = require('session_manager.utils').get_sessions()
-	  return #sessions + 2
-	end,
-	border = true,
-	box = "vertical",
-	title = "{title} {live} {flags}",
-	{ win = "input", height = 1, border = "bottom"},
-	{ win = "list", border = "hpad" },
+        backdrop = false,
+        row = 3,
+        width = 0.4,
+        min_width = 30,
+        min_height = 2,
+        height = function ()
+          local sessions = require('session_manager.utils').get_sessions()
+          return #sessions + 2
+        end,
+        border = true,
+        box = "vertical",
+        title = "{title} {live} {flags}",
+        { win = "input", height = 1, border = "bottom"},
+        { win = "list", border = "hpad" },
       },
     },
     icons = {
       files = {
-	enabled = false,
+        enabled = false,
       }
     },
     formatters = {
       file = {
-	filename_only = true,
+        filename_only = true,
       }
     },
     -- Keys to manipulat the sessions
@@ -293,8 +318,8 @@ vim.keymap.set('n', '<leader>mb', function()
 end, { desc = 'Toggle Lualine' })
 
 -- Diagnostic
-vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Prev diagnostic' })
-vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Next diagnostic' })
+vim.keymap.set('n', '[d', function() vim.diagnostic.jump({count= -1,float = true}) end, { desc = 'Prev diagnostic' })
+vim.keymap.set('n', ']d', function() vim.diagnostic.jump({count= 1,float = true}) end, { desc = 'Next diagnostic' })
 
 vim.keymap.set('n', '[D', function()
   vim.diagnostic.goto_prev({ count = math.huge })
@@ -313,10 +338,10 @@ vim.diagnostic.config({
 
 -- Highlight text when it is yanked
 local highlight_group = vim.api.nvim_create_augroup('YankHighlight', { clear = true })
-  vim.api.nvim_create_autocmd('TextYankPost', {
-    callback = function()
-      vim.highlight.on_yank()
-    end,
+vim.api.nvim_create_autocmd('TextYankPost', {
+  callback = function()
+    vim.highlight.on_yank()
+  end,
   group = highlight_group,
   pattern = '*',
 })
@@ -325,16 +350,26 @@ local highlight_group = vim.api.nvim_create_augroup('YankHighlight', { clear = t
 vim.api.nvim_create_autocmd("CursorHold", {
   callback = function()
     -- Check if it's a LaTeX file
-    if vim.bo.filetype == "tex" then
-      return
-    end
+    -- if vim.bo.filetype == "tex" then
+    --   return
+    -- end
 
     -- Save only if the buffer is modifiable and has unsaved changes
-    if vim.bo.modifiable and vim.bo.modified then
+    if vim.g.auto_save and vim.bo.modifiable and vim.bo.modified then
       vim.cmd("silent! write")
     end
   end,
 })
+
+vim.keymap.set('n', '<leader>ua', function()
+  vim.g.auto_save = not vim.g.auto_save
+
+  if vim.g.auto_save then
+    vim.notify("Enabled Autosave", vim.log.levels.INFO, { title = "Autosave" })
+  else
+    vim.notify("Disabled Autosave", vim.log.levels.WARN, { title = "Autosave" })
+  end
+end, { desc = "Toggle Auto-save" })
 
 -- Create a new folder is saving a file in a folder that does not exist
 vim.api.nvim_create_autocmd({ "BufWritePre" }, {
@@ -365,20 +400,46 @@ vim.api.nvim_create_autocmd("ColorScheme", {
   end,
 })
 
---- Refocus terminal after VimTeX inverse search (macOS) ---
-local function tex_focus_nvim()
-  vim.fn.system({ "open", "-a", "WezTerm" }) -- change if needed
-  vim.cmd("redraw!")
+-- Fix: guard diagnostic autocmd cleanup on buffer close
+local orig = vim.api.nvim_del_autocmd
+vim.api.nvim_del_autocmd = function(id)
+  pcall(orig, id)
 end
 
-vim.api.nvim_create_augroup("vimtex_event_focus", { clear = true })
+vim.diagnostic.config({
+  -- Stop diagnostics from updating while you're typing
+  update_in_insert = false,
 
-vim.api.nvim_create_autocmd("User", {
-  group = "vimtex_event_focus",
-  pattern = "VimtexEventViewReverse",
-  callback = tex_focus_nvim,
+  -- Prevent the diagnostic engine from being too aggressive
+  virtual_text = {
+    spacing = 4,
+    prefix = '●',
+  },
+  severity_sort = true,
+  float = {
+    focusable = false,
+    style = "minimal",
+    border = "rounded",
+    source = "always",
+    header = "",
+    prefix = "",
+  },
 })
+--- Refocus terminal after VimTeX inverse search (macOS) ---
+-- local function tex_focus_nvim()
+--   vim.fn.system({ "open", "-a", "WezTerm" }) -- change if needed
+--   vim.cmd("redraw!")
+-- end
+
+-- vim.api.nvim_create_augroup("vimtex_event_focus", { clear = true })
+--
+-- vim.api.nvim_create_autocmd("User", {
+--   group = "vimtex_event_focus",
+--   pattern = "VimtexEventViewReverse",
+--   callback = tex_focus_nvim,
+-- })
 ---
+
 -- Show diagnostic when the cursor is over a source of errors/warnings
 -- vim.api.nvim_create_autocmd("CursorHold", {
 --   buffer = bufnr,

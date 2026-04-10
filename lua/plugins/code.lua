@@ -46,7 +46,13 @@ return {
     lazy = false,
     opts = {
       auto_install = true,
-      ensure_installed = { "pyright", "ruff", "lua_ls"}
+      ensure_installed = {
+        "pyright",
+        "ruff",
+        "lua_ls",
+        "texlab",
+        "clangd",
+      }
     },
   },
 
