@@ -60,20 +60,6 @@ return {
     )
   ),
 
-  -- \begin{quantikz} environment
-  s({trig="qq", snippetType="autosnippet"},
-    fmta(
-[[
-\begin{quantikz}
-  & <> &
-\end{quantikz}
-]],
-      {
-	i(1),
-      }
-    )
-  ),
-
   -- \begin{quantikz} + \begin{figure} environment
   s({trig="qf", snippetType="autosnippet"},
     fmta(
@@ -129,7 +115,36 @@ return {
     )
   ),
 
-  --- Snippets for textmode ---
+  --- Snippets for commands in textmode ---
+  -- Fig.~\ref{fig:}
+  s({trig = "fqrf", snippetType="autosnippet"},
+    fmta(
+      "Fig.~\\ref{fig:<>}",
+      {
+        i(1),
+      }
+    )
+  ),
+
+  s({trig = "qrf", snippetType="autosnippet"},
+    fmta(
+      "~\\eqref{eq:<>}",
+      {
+        i(1),
+      }
+    )
+  ),
+
+  -- Eq.~\eqref{eq:}
+  s({trig = "qqrf", snippetType="autosnippet"},
+    fmta(
+      "Eq.~\\eqref{eq:<>}",
+      {
+        i(1),
+      }
+    )
+  ),
+
   -- \textit{}
   s({trig = "tt", snippetType="autosnippet"},
     fmta(
@@ -181,6 +196,17 @@ return {
   ),
 
   --- Snippets for mathmode ---
+
+  -- \text{}
+  s({trig = "tx", snippetType="autosnippet"},
+    fmta(
+      "\\text{<>}",
+      {
+        i(1),
+      }
+    )
+  ),
+
   -- \frac{}{}
   s({trig = "ff", snippetType="autosnippet", condition = in_mathzone},
     fmta(

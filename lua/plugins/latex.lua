@@ -11,15 +11,17 @@ return {
       vim.g.vimtex_syntax_conceal_disable = 0
 
       vim.g.vimtex_mappings_enabled = 0
-      -- vim.g.vimtex_mappings_text_objects = { enabled = 0 }
       vim.g.localleader = " "
-      vim.g.vimtex_view_method = "skim"
-      vim.g.vimtex_view_automatic = 1
+      vim.g.vimtex_view_method = "zathura_simple"
+      -- vim.g.vimtex_view_zathura_options = '-x "nvr --remote-silent +%l %f"'
+      -- vim.g.vimtex_view_automatic = 1
       vim.g.vimtex_quickfix_open_on_warning = 0
       vim.g.vimtex_compiler_latexmk = {
         aux_dir = 'build',
         out_dir = 'build',
       }
+
+      -- Custom commands syntax
       vim.g.vimtex_syntax_custom_cmds = {
         {
           name = 'meter', concealchar = 'M', conceal = true
@@ -29,6 +31,8 @@ return {
       --   name = 'quantikz',
       --   math = true
       -- }
+
+      -- Custom concealed delimiters
       vim.g.vimtex_syntax_custom_cmds_with_concealed_delims = {
         {
           name = 'ket',
@@ -68,6 +72,8 @@ return {
           cchar_close = '-',
         },
       }
+
+      -- Custom ColorScheme
       vim.api.nvim_create_autocmd("ColorScheme", {
         pattern = "*",
         callback = function()

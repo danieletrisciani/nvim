@@ -21,7 +21,7 @@ local function run()
 
   local comm = 'wezterm cli split-pane --right --percent 40 -- zsh -c '
   local echo = "echo '\\e[32mPython " .. file_name .. "\\e[0m \\n';"
-  local env = "source ~/Documents/qe/bin/activate;"
+  local env = "source ~/Documents/Settings/qe/bin/activate;"
   local py = "python " .. file_path .. ";"
   local last = "echo '\\n\\e[32mEnd \\e[0m' ;"
   local tot_comm = comm .. '"'.. echo .. env .. py .. last .. 'read"'

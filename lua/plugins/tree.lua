@@ -88,6 +88,7 @@ return {
       'vimdoc',
       'xml',
       'yaml',
+      'cpp',
     }
 
     -- Install core parsers after lazy.nvim finishes loading all plugins
