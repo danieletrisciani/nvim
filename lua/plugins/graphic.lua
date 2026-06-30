@@ -7,16 +7,28 @@ return {
   },
 
   -- a theme similar to vscode theme
+  -- {
+  --  "Mofiqul/vscode.nvim",
+  --  lazy = false,
+  --  priority = 1000,
+  --  config = function()
+  --    -- load the colorscheme here
+  --    vim.cmd([[colorscheme vscode]])
+  --  end,
+  -- },
   {
-   "Mofiqul/vscode.nvim",
-   lazy = false,
-   priority = 1000,
-   config = function()
-     -- load the colorscheme here
-     vim.cmd([[colorscheme vscode]])
-   end,
+    "ellisonleao/gruvbox.nvim",
+    priority = 1000, -- Ensure the theme loads before other plugins
+    config = function()
+      -- Optional configuration
+      require("gruvbox").setup({
+        contrast = "hard", -- can be "hard", "soft" or empty string
+        transparent_mode = true,
+      })
+      -- Load the colorscheme
+      vim.cmd("colorscheme gruvbox")
+    end,
   },
-
   -- replacement for the traditional vim statusline
   {
     "nvim-lualine/lualine.nvim",

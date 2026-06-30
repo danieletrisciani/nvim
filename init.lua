@@ -3,6 +3,9 @@
 local hitex = 'echo synIDattr(synID(line("."), col("."), 1), "name")'
 vim.api.nvim_create_user_command("Hig", hitex, {})
 
+-- Cursor settings. This enables the cursor blinking in every mode.
+vim.opt.guicursor = "n-v-c-sm:block,i-ci-ve:ver25,r-cr-o:hor20,t:block-TermCursor,a:blinkwait500-blinkoff500-blinkon500"
+
 -- Default folders for new projects
 local pr_folder = vim.fn.expand("~/cloud/Projects/") -- Programming language projects
 local tex_folder = vim.fn.expand("~/cloud/Texdocs/") -- Latex projects
@@ -383,11 +386,26 @@ vim.api.nvim_create_autocmd({ "BufWritePre" }, {
   end,
 })
 
+-- Create an augroup to prevent duplicate autocommands on reload
+local luasnip_undo_group = vim.api.nvim_create_augroup("LuaSnipUndo", { clear = true })
+
+vim.api.nvim_create_autocmd("User", {
+  pattern = "LuasnipPreExpand",
+  group = luasnip_undo_group,
+  callback = function()
+    -- Break the undo sequence right before the snippet expands
+    local keys = vim.api.nvim_replace_termcodes("<C-g>u", true, true, true)
+    vim.api.nvim_feedkeys(keys, "i", true)
+  end,
+})
+
 -- Adds a colored line after the context line
 vim.cmd([[
   hi TreesitterContextBottom gui=underline guisp=Grey
   "hi TreesitterContextLineNumberBottom gui=underline guisp=Grey
 ]])
+
+vim.keymap.set('n', '<C-i>', '<C-i>', { noremap = true })
 
 -- We wrap this in a ColorScheme autocommand so it doesn't get 
 -- overwritten when your theme loads.
@@ -425,12 +443,39 @@ vim.diagnostic.config({
     prefix = "",
   },
 })
---- Refocus terminal after VimTeX inverse search (macOS) ---
+
+local api = vim.api
+
+local g = api.nvim_create_augroup("personal-luasnip", { clear = true })
+api.nvim_create_autocmd("User", {
+  group = g,
+  pattern = "LuasnipPreExpand",
+  callback = function()
+    vim.go.undolevels = vim.go.undolevels
+  end,
+})
+
+-- Run this after LuaSnip is loaded
+-- local ls = require('luasnip')
+--
+-- local orig_expand_auto = ls.expand_auto
+-- ls.expand_auto = function(...)
+--   -- Synchronous undo break — no feedkeys, no timing issues
+--   vim.o.undolevels = vim.o.undolevels
+--   return orig_expand_auto(...)
+-- end
+
+--
+-- vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
+-- vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })
+-- vim.api.nvim_set_hl(0, "NormalNC", { bg = "none" })
+--
+-- --- Refocus terminal after VimTeX inverse search (macOS) ---
 -- local function tex_focus_nvim()
 --   vim.fn.system({ "open", "-a", "WezTerm" }) -- change if needed
 --   vim.cmd("redraw!")
 -- end
-
+--
 -- vim.api.nvim_create_augroup("vimtex_event_focus", { clear = true })
 --
 -- vim.api.nvim_create_autocmd("User", {
@@ -438,7 +483,6 @@ vim.diagnostic.config({
 --   pattern = "VimtexEventViewReverse",
 --   callback = tex_focus_nvim,
 -- })
----
 
 -- Show diagnostic when the cursor is over a source of errors/warnings
 -- vim.api.nvim_create_autocmd("CursorHold", {

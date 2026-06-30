@@ -30,7 +30,7 @@ local rep = require("luasnip.extras").rep
 return {
 
   -- \begin{whatever} environment
-  s({trig="bb", snippetType="autosnippet"},
+  s({trig="bbb", snippetType="autosnippet"},
     fmta(
       --- Snippets for environment creation ---
 [[

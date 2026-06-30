@@ -209,8 +209,8 @@ return {
     opts = {
       keymap = {
         preset = 'default',
-        ['<S-Tab>'] = { 'select_prev', 'snippet_backward', 'fallback' },
-        ['<Tab>'] = { 'select_next', 'snippet_forward', 'fallback' },
+        ['<S-Tab>'] = { 'snippet_backward', 'select_prev', 'fallback' },
+        ['<Tab>'] = { 'snippet_forward',  'select_next', 'fallback' },
         ["<CR>"] = { "accept", "fallback" },
         ["<Esc>"] = { "hide", "fallback" },
       },
@@ -240,7 +240,9 @@ return {
         },
       },
 
-      snippets = { preset = 'luasnip' },
+      snippets = {
+        preset = 'luasnip',
+      },
 
       fuzzy = { implementation = 'prefer_rust_with_warning' },
 
