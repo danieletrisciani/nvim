@@ -263,3 +263,50 @@ vim.keymap.set(nxo, ']*', '<Plug>(vimtex-]*)', {
   buffer = true,
   desc = 'Comment line',
 })
+
+vim.keymap.set('v', '<leader>lc', '<Plug>(vimtex-cmd-create)', {
+  buffer = true,
+  desc = 'Comment line',
+})
+
+vim.keymap.set('v', '<leader>le', '<Plug>(vimtex-env-surround-visual)', {
+  buffer = true,
+  desc = 'Comment line',
+})
+
+-- vim.keymap.set('v', '<leader>c', '<plug>(vimtex-cmd-create)', {
+--   buffer = true,
+--   desc = 'Surround with command'
+-- })
+
+local function surround_with(cmd)
+  return function()
+    -- yank the visual selection into register z (doesn't touch unnamed register)
+    vim.cmd('normal! "zy')
+    local text = vim.fn.getreg('z')
+
+    local wrapped
+    if text:find('\n') then
+      -- multiline: put opening brace on its own line
+      wrapped = '\\' .. cmd .. '{\n' .. text .. '}'
+    else
+      wrapped = '\\' .. cmd .. '{' .. text .. '}'
+    end
+
+    -- force charwise so pasting doesn't insert an extra line
+    vim.fn.setreg('z', wrapped, 'v')
+
+    -- reselect the same visual region (gv) and paste over it
+    vim.cmd('normal! gv"zp')
+  end
+end
+
+vim.keymap.set('v', '<leader>c', surround_with('red'), {
+  buffer = true,
+  desc = 'Surround with \\red{}'
+})
+
+vim.keymap.set('v', '<leader>b', surround_with('bm'), {
+  buffer = true,
+  desc = 'Surround with \\red{}'
+})
