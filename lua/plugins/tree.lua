@@ -89,6 +89,9 @@ return {
       'xml',
       'yaml',
       'cpp',
+      'latex',
+      'hyprlang',
+      'fish'
     }
 
     -- Install core parsers after lazy.nvim finishes loading all plugins
@@ -103,10 +106,6 @@ return {
     })
 
     local group = vim.api.nvim_create_augroup('TreesitterSetup', { clear = true })
-
-    local ignore_filetypes = {
-      'tex',
-    }
 
     -- Auto-install parsers and enable highlighting on FileType
     vim.api.nvim_create_autocmd('FileType', {

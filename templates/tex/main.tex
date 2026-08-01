@@ -1,0 +1,62 @@
+\documentclass[a4paper,onecolumn,11pt,unpublished]{article}
+\pdfoutput=1
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage[T1]{fontenc}
+% math fonts
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{bm}
+\usepackage{bbm}
+\usepackage{bbold}
+\usepackage{dsfont}
+\usepackage{mathrsfs}
+\usepackage{xspace}
+% floats and tables
+\usepackage{tabularx}
+\usepackage{cellspace}
+\usepackage{dcolumn}
+\usepackage{subcaption}
+% graphics and figures
+\usepackage{graphicx}
+% tikz
+\usepackage{tikz}
+\usetikzlibrary{quantikz2}
+% colors, hyprlinks and citations
+\usepackage{xcolor}
+\usepackage[pdfusetitle]{hyperref}
+\hypersetup{citecolor=blue}
+\usepackage[capitalise]{cleveref}
+\usepackage[numbers]{natbib}
+
+\newcommand{\red}[1]{\textcolor{red}{#1}}
+\newcommand{\hc}{\mathrm{h.c.}}
+\newcommand{\rre}{\mathrm{Re}}
+\newcommand{\rim}{\mathrm{Im}}
+\newcommand{\bs}{\textbackslash}
+\newcommand{\Tr}{\op{Tr}}
+\newcommand{\id}{\mathbb{1}}
+
+% gate names
+\newcommand{\cnot}{\ensuremath{\mathrm{CNOT}}\xspace}
+\newcommand{\swp}{\ensuremath{\mathrm{SWAP}}\xspace}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}[section]
+
+\title{Template}
+\author{Daniele Trisciani}
+
+\begin{document}
+
+\maketitle
+\setlength{\parindent}{0pt}
+
+\section{Section template}
+
+\bibliographystyle{quantum}
+\bibliography{main}
+
+\end{document}

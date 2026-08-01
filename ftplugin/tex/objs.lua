@@ -3,7 +3,7 @@ local nx = {"n", "x"}
 local xo = {"x", "o"}
 local nxo = {"n","x", "o"}
 
---- Remap of VimTex default textobjects ---
+--- VimTex textobjects binds ---
 --- Delete ---
 
 vim.keymap.set('n', '<leader>de', '<Plug>(vimtex-env-delete)', {
@@ -23,7 +23,7 @@ vim.keymap.set('n', '<leader>dn', '<Plug>(vimtex-env-delete-math)', {
 
 vim.keymap.set('n', '<leader>dd', '<Plug>(vimtex-delim-delete)', {
   buffer = true,
-  desc = 'Delimiters',
+  desc = 'Math delimiters',
 })
 
 vim.keymap.set('n', 'K', '<Plug>(vimtex-doc-package)', {
@@ -95,7 +95,7 @@ vim.keymap.set("n", '<leader>tD', '<Plug>(vimtex-delim-toggle-modifier-reverse)'
   desc = 'Reverse dels',
 })
 
---- Select ---
+--- Motions ---
 
 vim.keymap.set(xo, 'ac', '<Plug>(vimtex-ac)', {
   buffer = true,
@@ -264,20 +264,22 @@ vim.keymap.set(nxo, ']*', '<Plug>(vimtex-]*)', {
   desc = 'Comment line',
 })
 
-vim.keymap.set('v', '<leader>lc', '<Plug>(vimtex-cmd-create)', {
+-- Surround text in visual mode --
+vim.keymap.set('x', '<leader>lc', '<Plug>(vimtex-cmd-create)', {
   buffer = true,
-  desc = 'Comment line',
+  desc = 'Surround with command',
 })
 
-vim.keymap.set('v', '<leader>le', '<Plug>(vimtex-env-surround-visual)', {
+vim.keymap.set('x', '<leader>le', '<Plug>(vimtex-env-surround-visual)', {
   buffer = true,
-  desc = 'Comment line',
+  desc = 'Surround with env',
 })
 
--- vim.keymap.set('v', '<leader>c', '<plug>(vimtex-cmd-create)', {
---   buffer = true,
---   desc = 'Surround with command'
--- })
+vim.keymap.set('x', '<leader>ln', '<Plug>(vimtex-delim-add-modifiers)', {
+  buffer = true,
+  desc = 'Add math delimiters',
+
+})
 
 local function surround_with(cmd)
   return function()
