@@ -1,13 +1,18 @@
 
-local in_mathzone = function()
+local in_math_func = function()
   -- The `in_mathzone` function requires the VimTeX plugin
   return vim.fn['vimtex#syntax#in_mathzone']() == 1
 end
 
-local out_mathzone = function()
+local out_math_func = function()
   -- The `in_mathzone` function requires the VimTeX plugin
-  return vim.fn['vimtex#syntax#in_mathzone']() == 0
+  return not in_math_func()
 end
+
+local make_condition = require("luasnip.extras.conditions").make_condition
+
+local out_math = make_condition(out_math_func)
+local in_math = make_condition(in_math_func)
 
 local in_quantikz = function()
   -- The `in_mathzone` function requires the VimTeX plugin
@@ -19,23 +24,34 @@ end
 local ls = require("luasnip")
 local s = ls.snippet
 -- local sn = ls.snippet_node
--- local t = ls.text_node
+local t = ls.text_node
 local i = ls.insert_node
--- local f = ls.function_node
--- local d = ls.dynamic_node
+local f = ls.function_node
+local d = ls.dynamic_node
 -- local fmt = require("luasnip.extras.fmt").fmt
 local fmta = require("luasnip.extras.fmt").fmta
 local rep = require("luasnip.extras").rep
+local line_begin = require("luasnip.extras.conditions.expand").line_begin
+local postfix = require("luasnip.extras.postfix").postfix
+
+local tex = {}
+tex.in_mathzone = function()
+        return vim.fn['vimtex#syntax#in_mathzone']() == 1
+end
+
+tex.in_text = function()
+        return not tex.in_mathzone()
+end
 
 return {
 
   -- \begin{whatever} environment
-  s({trig="bbb", snippetType="autosnippet"},
+  s({trig="bb", snippetType="autosnippet", condition = line_begin},
     fmta(
       --- Snippets for environment creation ---
 [[
 \begin{<>}
-  <>
+    <>
 \end{<>}
 ]],
       {
@@ -46,137 +62,106 @@ return {
     )
   ),
 
-  -- \begin{equation} environment
-  s({trig="ee", snippetType="autosnippet"},
-    fmta(
+    -- \begin{equation} environment
+    s({trig="ee", snippetType="autosnippet", condition=out_math * line_begin},
+        fmta(
 [[
 \begin{equation}
-  <>
+    <>
 \end{equation}
 ]],
-      {
-        i(1),
-      }
-    )
-  ),
+            {
+                i(1),
+            }
+        )
+    ),
 
-  -- \begin{quantikz} + \begin{figure} environment
-  s({trig="qf", snippetType="autosnippet"},
-    fmta(
+    -- \begin{quantikz} + \begin{figure} environment
+    s({trig="qk", snippetType="autosnippet"},
+        fmta(
 [[
-\begin{figure}[ht]
 \begin{quantikz}
     & <> &
 \end{quantikz}
-\begin{quantikz}
-\end{figure}
 ]],
-      {
-        i(1),
-      }
-    )
-  ),
+            {
+                i(1),
+            }
+        )
+    ),
 
-  -- $ ... $
-  s({trig = "ii", snippetType="autosnippet"},
-    fmta(
-      "$<>$",
-      {
-	i(1),
-      }
-    )
-  ),
+    -- $ ... $
+    s({trig = "ii", snippetType="autosnippet", condition = out_math},
+        fmta(
+            "$<>$",
+            {
+                i(1),
+            }
+        )
+    ),
 
-  -- \begin{enumerate}
-  s({trig = "tm", snippetType="autosnippet", condition = out_mathzone},
-    fmta(
+    -- \begin{itemize}
+    s({trig = "tm", snippetType="autosnippet", condition = out_math * line_begin},
+        fmta(
 [[
 \begin{itemize}
   \item <>
 \end{itemize}
 ]],
-      {
-        i(1),
-      }
-    )
-  ),
+            {
+                i(1),
+            }
+        )
+    ),
 
-  -- \begin{enumerate}
-  s({trig = "nm", snippetType="autosnippet", condition = out_mathzone},
-    fmta(
+
+    -- \begin{enumerate}
+    s({trig = "nm", snippetType="autosnippet", condition = line_begin * out_math},
+        fmta(
 [[
 \begin{enumerate}
   \item <>
 \end{enumerate}
 ]],
-      {
-        i(1),
-      }
-    )
-  ),
+            {
+                i(1),
+            }
+        )
+    ),
 
-  --- Snippets for commands in textmode ---
-  -- Fig.~\ref{fig:}
-  s({trig = "fqrf", snippetType="autosnippet"},
-    fmta(
-      "Fig.~\\ref{fig:<>}",
-      {
-        i(1),
-      }
-    )
-  ),
+    --- Snippets for commands in textmode ---
+    -- \textit{}
+    s({trig = "tt", snippetType="autosnippet", condition=out_math},
+        fmta(
+            "\\textit{<>}",
+            {
+                i(1),
+            }
+        )
+    ),
 
-  s({trig = "qrf", snippetType="autosnippet"},
-    fmta(
-      "~\\eqref{eq:<>}",
-      {
-        i(1),
-      }
-    )
-  ),
+    -- \textbf{}
+    s({trig = "bf", snippetType="autosnippet", condition=in_math},
+        fmta(
+            "\\textbf{<>}",
+            {
+                i(1),
+            }
+        )
+    ),
 
-  -- Eq.~\eqref{eq:}
-  s({trig = "qqrf", snippetType="autosnippet"},
-    fmta(
-      "Eq.~\\eqref{eq:<>}",
-      {
-        i(1),
-      }
-    )
-  ),
-
-  -- \textit{}
-  s({trig = "tt", snippetType="autosnippet"},
-    fmta(
-      "\\textit{<>}",
-      {
-        i(1),
-      }
-    )
-  ),
-
-  -- \textbf{}
-  s({trig = "bf", snippetType="autosnippet"},
-    fmta(
-      "\\textbf{<>}",
-      {
-        i(1),
-      }
-    )
-  ),
-
-  -- \ref{}
-  s({trig = "bf", snippetType="autosnippet", condition = out_mathzone},
-    fmta(
-      "\\ref{<>}",
-      {
-        i(1),
-      }
-    )
-  ),
+    -- \ref{}
+    s({trig = "bf", snippetType="autosnippet", condition = out_math},
+        fmta(
+            "\\ref{<>}",
+            {
+                i(1),
+            }
+        )
+    ),
 
   -- \cite{}
-  s({trig = "bf", snippetType="autosnippet"},
+  s({trig = "bf", snippetType="autosnippet", condition = out_math},
     fmta(
       "\\cite{<>}",
       {
@@ -186,7 +171,7 @@ return {
   ),
 
   -- \section{}
-  s({trig = "sct", snippetType="autosnippet"},
+  s({trig = "sct", snippetType="autosnippet", condition = out_math},
     fmta(
       "\\section{<>}",
       {
@@ -198,7 +183,7 @@ return {
   --- Snippets for mathmode ---
 
   -- \text{}
-  s({trig = "tx", snippetType="autosnippet"},
+  s({trig = "tx", snippetType="autosnippet", condition = in_math},
     fmta(
       "\\text{<>}",
       {
@@ -208,7 +193,7 @@ return {
   ),
 
   -- \frac{}{}
-  s({trig = "ff", snippetType="autosnippet", condition = in_mathzone},
+  s({trig = "ff", snippetType="autosnippet", condition = in_math},
     fmta(
       "\\frac{<>}{<>}",
       {
@@ -219,7 +204,7 @@ return {
   ),
 
   -- \ket{}
-  s({trig = "kk", snippetType="autosnippet", condition = in_mathzone},
+  s({trig = "kk", snippetType="autosnippet", condition = in_math},
     fmta(
       "\\ket{<>}",
       {
@@ -229,7 +214,7 @@ return {
   ),
 
   -- \bmod
-  s({trig = "bmd", snippetType="autosnippet", condition = in_mathzone},
+  s({trig = "bmd", snippetType="autosnippet", condition = in_math},
     fmta(
       "\\bmod",
       { }
@@ -237,7 +222,7 @@ return {
   ),
 
   -- \omega
-  s({trig = "mg", snippetType="autosnippet", condition = in_mathzone},
+  s({trig = "mg", snippetType="autosnippet", condition = in_math},
     fmta(
       "\\omega",
       { }
@@ -245,7 +230,7 @@ return {
   ),
 
   -- \times
-  s({trig = "tms", snippetType="autosnippet", condition = in_mathzone},
+  s({trig = "tms", snippetType="autosnippet", condition = in_math},
     fmta(
       "\\otimes",
       { }
@@ -292,4 +277,5 @@ return {
     )
   ),
 }
+
 

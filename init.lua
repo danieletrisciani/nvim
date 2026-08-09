@@ -4,11 +4,12 @@ local hitex = 'echo synIDattr(synID(line("."), col("."), 1), "name")'
 vim.api.nvim_create_user_command("Hig", hitex, {})
 
 -- Cursor settings. This enables the cursor blinking in every mode.
-vim.opt.guicursor = "n-v-c-sm:block,i-ci-ve:ver25,r-cr-o:hor20,t:block-TermCursor,a:blinkwait500-blinkoff500-blinkon500"
+vim.opt.guicursor = "n-v-c-sm:block-Cursor,i-ci-ve:ver25-Cursor,r-cr-o:hor20-Cursor,t:block-TermCursor,a:blinkwait500-blinkoff500-blinkon500"
 
 ---- START OF init.lua ----
 -- User defined global variables --
 vim.g.auto_save = true
+vim.g.auto_refresh_enabled = true
 
 -- set leader key to space
 vim.g.mapleader = ' '
@@ -51,6 +52,9 @@ vim.o.timeoutlen = 300
 -- What is saved in a session
 vim.o.sessionoptions = "buffers,curdir,folds,tabpages,winsize,winpos,terminal"
 
+-- ignore/auto-skip "ATTENTION" swap file messages
+vim.opt.shortmess:append('A')
+
 -- Inizialize Lazy and the plugins
 require("config.lazy")
 
@@ -72,7 +76,7 @@ vim.diagnostic.config({
         focusable = false,
         style = "minimal",
         border = "rounded",
-        source = "always",
+        source = "if_many",
         header = "",
         prefix = "",
     },
@@ -92,9 +96,23 @@ vim.api.nvim_set_hl(0, "BlinkCmpSignatureHelpBorder", { fg = "#e0af68"})
 -- Load the colorscheme
 vim.cmd("colorscheme gruvbox")
 
+-- Set the cursor color to red
+vim.api.nvim_set_hl(0, "Cursor", { bg = "#cc6666", fg = "#000000" })
+
 -- Adds a colored line after the context line
 vim.cmd([[
   hi TreesitterContextBottom gui=underline guisp=Grey
   hi TreesitterContextLineNumberBottom gui=underline guisp=Grey
 ]])
 
+local harpoon = require("harpoon")
+harpoon:setup({
+    settings = {
+        save_on_toggle = true,
+        sync_on_ui_close = true,
+        -- harpoon key function
+        key = function()
+            return vim.loop.cwd()
+        end,
+    },
+})

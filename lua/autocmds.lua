@@ -1,4 +1,6 @@
 
+local fn = require("funcs")
+
 -- Assign Snacks UI functions
 vim.api.nvim_create_autocmd("User", {
     pattern = "VeryLazy",
@@ -77,6 +79,23 @@ api.nvim_create_autocmd("User", {
     end,
 })
 
+-- Clear the current snippet once you actually leave it, so Tab doesn't
+-- keep treating you as "inside a snippet" (snippet_forward would otherwise
+-- stay true forever and hijack Tab even after you've moved on).
+api.nvim_create_autocmd("ModeChanged", {
+    group = g,
+    pattern = "*",
+    callback = function()
+        local ls = require("luasnip")
+        if ((vim.v.event.old_mode == "s" and vim.v.event.new_mode == "n") or vim.v.event.old_mode == "i")
+            and ls.session.current_nodes[vim.api.nvim_get_current_buf()]
+            and not ls.session.jump_active
+        then
+            ls.unlink_current()
+        end
+    end,
+})
+
 -- Show diagnostic when the cursor is over a source of errors/warnings
 vim.api.nvim_create_autocmd("CursorHold", {
     callback = function()
@@ -113,58 +132,40 @@ vim.api.nvim_create_autocmd('DirChangedPre', {
     end,
 })
 
-vim.api.nvim_create_autocmd({ "RecordingEnter", "RecordingLeave" }, {
-  callback = function()
-    require("lualine").refresh()
-  end,
-})
-
-vim.api.nvim_create_autocmd("SwapExists", {
-    callback = function()
-        local info = vim.fn.swapinfo(vim.v.swapname)
-        local file = vim.fn.fnamemodify(vim.fn.expand("<afile>"), ":p")
-        local swap = vim.v.swapname
-        local owned = info.pid and info.pid > 0 and info.pid ~= vim.fn.getpid()
-
-
-        vim.v.swapchoice = "o"   -- always: silent, nothing aborts
-
-        vim.schedule(function()
-            local buf = vim.fn.bufnr(file)   -- the buffer that just opened RO
-
-            if owned then
-                if buf > 0 then
-                    vim.api.nvim_buf_delete(buf, { force = true })
-                end
-                vim.notify(("%s is open in another instance (pid %d)")
-                    :format(vim.fn.fnamemodify(file, ":t"), info.pid),
-                    vim.log.levels.WARN)
-                local ok, snacks = pcall(require, "snacks")
-                if ok then snacks.dashboard() end
-                return
-            end
-
-            -- stale swap: ask what to do
-            local actions = {
-                { label = "Edit anyway (delete swap)", act = function()
-                    vim.fn.delete(swap)
-                    vim.cmd("edit! " .. vim.fn.fnameescape(file))
-                end },
-                { label = "Recover from swap", act = function()
-                    vim.cmd("recover! " .. vim.fn.fnameescape(file))
-                    vim.fn.delete(swap)
-                end },
-                { label = "Keep read-only", act = function() end },
-                { label = "Close it", act = function()
-                    if buf > 0 then vim.api.nvim_buf_delete(buf, { force = true }) end
-                end },
-            }
-            vim.ui.select(actions, {
-                prompt = ("Swap file found for %s"):format(vim.fn.fnamemodify(file, ":t")),
-                format_item = function(item) return item.label end,
-            }, function(choice)
-                if choice then choice.act() end
-            end)
-        end)
+-- Save and close buffers when changing cwd
+vim.api.nvim_create_autocmd('DirChanged', {
+    callback = function(_)
+        fn.rl_terminal_title()
     end,
 })
+
+vim.api.nvim_create_autocmd({ "RecordingEnter", "RecordingLeave" }, {
+    callback = function()
+        require("lualine").refresh()
+    end,
+})
+
+vim.api.nvim_create_autocmd("BufLeave", {
+    callback = function()
+        if vim.bo.filetype == "harpoon" then
+            fn.set_harpoon_keymaps()
+        end
+    end,
+})
+
+-- Rename the kitty tab and window while Neovim is running,
+-- restoring the default title on exit
+if vim.env.KITTY_LISTEN_ON then
+    vim.api.nvim_create_autocmd("VimEnter", {
+        callback = function()
+            fn.rl_terminal_title()
+        end,
+    })
+
+    vim.api.nvim_create_autocmd("VimLeavePre", {
+        callback = function()
+            vim.fn.jobstart({ "kitty", "@", "set-tab-title", "" }, { detach = true })
+            vim.fn.jobstart({ "kitty", "@", "set-window-title", "" }, { detach = true })
+        end,
+    })
+end

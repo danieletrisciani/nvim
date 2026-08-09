@@ -126,3 +126,19 @@ vim.keymap.set('n', '<leader>ot', '<cmd>Obsidian tags<cr>', {desc="Search tags"}
 vim.keymap.set('n', '<leader>os', '<cmd>Obsidian search<cr>', {desc="Search in notes"} )
 vim.keymap.set('n', '<leader>on', '<cmd>Obsidian new<cr>', {desc="New note"} )
 vim.keymap.set('n', '<leader>op', '<cmd>Obsidian<cr>', {desc="Obsidian palette"} )
+
+vim.keymap.set('n', '<leader>ar', fn.toggle_auto_refresh, { noremap = true, desc = "Toggle auto refresh of files" })
+
+--- Harpoon binds ---
+local harpoon = require("harpoon")
+
+vim.keymap.set( "n", "<leader>hh", function() harpoon.ui:toggle_quick_menu(harpoon:list()) end, { desc = "Harpoon list" })
+
+fn.set_harpoon_keymaps()
+
+--- todo-comments keybindings
+local fn_todo = require("todo-comments")
+
+vim.keymap.set("n", "]t", function() fn_todo.jump_next() end, { desc = "TODO comment" })
+
+vim.keymap.set("n", "[t", function() fn_todo.jump_prev() end, { desc = "TODO comment" })

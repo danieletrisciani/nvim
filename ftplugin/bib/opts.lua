@@ -1,6 +1,5 @@
 
-
-local width = 4
+local width = 2
 
 vim.opt.wrap = true -- Enable wrap
 vim.opt_local.expandtab = true      -- Usa spazi invece di tab
@@ -10,12 +9,8 @@ vim.opt_local.softtabstop = width       -- Backspace rimuove 2 spazi
 vim.opt_local.autoindent = true     -- Mantieni indentazione
 vim.opt_local.smartindent = false   -- Disabilita per LaTeX
 vim.opt_local.linebreak = true
-vim.opt_local.relativenumber = false -- Disable relative number
-vim.opt_local.number = false -- Disable number line
-vim.opt_local.signcolumn = 'yes:1'
+vim.opt_local.relativenumber = false
+vim.opt_local.number = false
 vim.wo.conceallevel = 0
-vim.opt_local.concealcursor = ''
-
--- Highlights
-vim.api.nvim_set_hl(0, "texError", { fg = "#000000" })
+vim.opt.concealcursor = ''
 

@@ -73,15 +73,19 @@ return {
             end
             -- Returns the register letter when recording
             local function compile_glyphs()
-                if vim.g.compile_status == 'compiling' and vim.bo.filetype == 'tex' then
-                    return ''
-                end
-                return ''
-            end
-            -- Returns the register letter when recording
-            local function compile_status()
-                if vim.g.compile_status and vim.bo.filetype == 'tex' then
-                    return 'compiling'
+                if vim.bo.filetype == 'tex' then
+                    if vim.g.compile_status == 1 then
+                        vim.g.compile_status_color = '#FFE066'
+                    end
+                    if vim.g.compile_status == 2 then
+                        vim.g.compile_status_color = '#a6da95'
+                    end
+                    if vim.g.compile_status == 3 then
+                        vim.g.compile_status_color = '#ed8796'
+                    end
+                    if vim.g.compile_status then
+                        return ' '
+                    end
                 end
                 return ''
             end
@@ -111,7 +115,14 @@ return {
                         },
                         compile_status,
                     },
-                    lualine_z = { "progress", "location" },
+                    lualine_z = {
+                        {
+                            "progress",
+                            separator = '',
+                            padding = { left = 1, right = 0 },
+                        },
+                        "location",
+                    },
                 },
                 inactive_sections = {
                     lualine_c = { "buffers" },

@@ -1,7 +1,7 @@
 -- Default folders for new projects
 local roots = {
-    tex_folder = vim.fn.expand('~/cloud/Projects'),
-    pr_folder = vim.fn.expand('~/cloud/Texdocs'),
+    pr_folder = vim.fn.expand('~/cloud/Projects'),
+    tex_folder = vim.fn.expand('~/cloud/Texdocs'),
 }
 
 -- Template projects
@@ -219,6 +219,59 @@ M.new_buffer = function()
         if not name or name == "" then return end
         vim.cmd.edit(vim.fn.fnameescape(name))
     end)
+end
+
+-- Harpoon autocmds
+local harpoon = require("harpoon")
+
+M.harpoon_file = function(i)
+    local item = harpoon:list().items[i]
+    if not item then return "empty" end
+
+    local path = item.value
+    local parent = vim.fn.fnamemodify(path, ":h:t")
+    local filename = vim.fn.fnamemodify(path, ":t")
+
+    if parent == "" or parent == "." then
+        return filename
+    end
+    return parent .. "/" .. filename
+end
+
+M.set_harpoon_keymaps = function()
+    for i = 1, 5 do
+        vim.keymap.set("n", "<leader>" .. i, function() harpoon:list():select(i) end,
+            { desc = M.harpoon_file(i) })
+        vim.keymap.set("n", "<leader>h" .. i, function() harpoon:list():replace_at(i); M.set_harpoon_keymaps() end,
+            { desc = "Replace " .. i .. ": " .. M.harpoon_file(i) })
+    end
+end
+
+-- Function to toggle the behavior
+M.toggle_auto_refresh = function()
+  if vim.g.auto_refresh_enabled then
+    vim.api.nvim_clear_autocmds({ group = "AutoRefresh" })
+    vim.g.auto_refresh_enabled = false
+    print("Auto refresh disabled")
+  else
+    vim.o.autoread = true
+    vim.api.nvim_create_augroup("AutoRefresh", { clear = true })
+    vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter" }, {
+      group = "AutoRefresh",
+      command = "if mode() != 'c' | checktime | endif",
+      pattern = "*",
+    })
+    vim.g.auto_refresh_enabled = true
+    print("Auto refresh enabled")
+  end
+end
+
+M.rl_terminal_title = function ()
+    local dirname = vim.fn.fnamemodify(vim.uv.cwd(), ":t")
+    local title = "  " .. dirname
+    local win_title = " \u{2060} " .. dirname
+    vim.fn.jobstart({ "kitty", "@", "set-tab-title", title }, { detach = true })
+    vim.fn.jobstart({ "kitty", "@", "set-window-title", win_title }, { detach = true })
 end
 
 return M

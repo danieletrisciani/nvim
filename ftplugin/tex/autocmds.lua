@@ -1,8 +1,10 @@
+
 local au_group = vim.api.nvim_create_augroup("vimtex_events", {})
+local fn = require("funcs")
 
 -- Focus the terminal after inverse search (Hyprland/Wayland)
 
----PID of the terminal: nvim's grandparent (nvim ← fish ← kitty).
+--- PID of the terminal: nvim's grandparent (nvim ← fish ← kitty).
 local function terminal_pid()
     local function ppid_of(pid)
         local stat = vim.fn.readfile("/proc/" .. pid .. "/stat")[1]
@@ -14,16 +16,18 @@ end
 -- Terminal can't change during the session: compute once.
 local term_pid = terminal_pid()
 
+--- Reverse search (From Zathiura to nvim)
 vim.api.nvim_create_autocmd("User", {
     pattern = "VimtexEventViewReverse",
     group = au_group,
     callback = function()
         if not term_pid then return end
-        vim.notify("pid: " .. term_pid)
         vim.fn.system({
             "hyprctl", "eval",
             'hl.dispatch(hl.dsp.focus({ window = "pid:' .. term_pid .. '" }))',
         })
+        vim.fn.system("kitty @ focus-window --match id:" .. vim.env.KITTY_WINDOW_ID)
+        fn.rl_terminal_title()
     end,
 })
 
@@ -47,6 +51,10 @@ vim.api.nvim_create_autocmd('User', {
         if vim.v.shell_error ~= 0 then
             vim.notify('Techdocs copy failed: ' .. name, vim.log.levels.ERROR)
         end
+
+       -- Change compilation indicator status
+        vim.g.compile_status = 2
+        require("lualine").refresh()
     end,
 })
 
@@ -63,8 +71,7 @@ vim.api.nvim_create_autocmd('User', {
 vim.api.nvim_create_autocmd('User', {
     pattern = 'VimtexEventCompiling',
     callback = function()
-        vim.g.compile_status = 'compiling'
-        vim.g.compile_status_color = '#ed8796'
+        vim.g.compile_status = 1
         require("lualine").refresh()
     end,
 })
@@ -78,18 +85,9 @@ vim.api.nvim_create_autocmd('User', {
 })
 
 vim.api.nvim_create_autocmd('User', {
-    pattern = 'VimtexEventCompileSuccess',
-    callback = function()
-        vim.g.compile_status_color = '#a6da95'
-        require("lualine").refresh()
-    end,
-})
-
-vim.api.nvim_create_autocmd('User', {
     pattern = 'VimtexEventCompileFailed',
     callback = function()
-        vim.g.compile_status_color = '#ed8796'
+        vim.g.compile_status = 3
         require("lualine").refresh()
     end,
 })
-
