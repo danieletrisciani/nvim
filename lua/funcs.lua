@@ -12,8 +12,15 @@ local M = {}
 M.new_session = function() vim.cmd("SessionManager save_current_session") end
 M.restore_session = function() vim.cmd("SessionManager load_current_dir_session") end
 
+-- Opens a new tab in the same cwd
 M.new_tab = function ()
     local script = vim.fs.joinpath(vim.fn.stdpath("config"), "scripts", "new_tab.fish")
+    vim.system({ "fish", script}, { text = true })
+end
+
+-- Opens Claude in the same cwd on the last session
+M.open_claude = function ()
+    local script = vim.fs.joinpath(vim.fn.stdpath("config"), "scripts", "claude.fish")
     vim.system({ "fish", script}, { text = true })
 end
 
@@ -240,8 +247,20 @@ end
 
 M.set_harpoon_keymaps = function()
     for i = 1, 5 do
-        vim.keymap.set("n", "<leader>" .. i, function() harpoon:list():select(i) end,
-            { desc = M.harpoon_file(i) })
+
+        local file_name = M.harpoon_file(i)
+        local harp_binds = "<leader>" .. i
+        local harp_mode = "n"
+
+        -- Only set keymaps for which a file exists
+        if file_name == "empty" then
+            if vim.fn.maparg(harp_binds, harp_mode) ~= '' then
+                vim.keymap.del(harp_mode, harp_binds)
+            end
+        else
+            vim.keymap.set(harp_mode, harp_binds, function() harpoon:list():select(i) end, { desc = file_name })
+        end
+
         vim.keymap.set("n", "<leader>h" .. i, function() harpoon:list():replace_at(i); M.set_harpoon_keymaps() end,
             { desc = "Replace " .. i .. ": " .. M.harpoon_file(i) })
     end
@@ -272,6 +291,35 @@ M.rl_terminal_title = function ()
     local win_title = " \u{2060} " .. dirname
     vim.fn.jobstart({ "kitty", "@", "set-tab-title", title }, { detach = true })
     vim.fn.jobstart({ "kitty", "@", "set-window-title", win_title }, { detach = true })
+end
+
+-- Deletes backwards up to the previous whitespace, like `dB` in normal mode.
+-- Unlike <C-w> it does not stop on punctuation. Works in insert and cmdline mode.
+M.delete_WORD_backward = function ()
+    local in_cmdline = vim.fn.mode() == "c"
+    local line, col
+
+    if in_cmdline then
+        line = vim.fn.getcmdline()
+        col = vim.fn.getcmdpos() - 1
+    else
+        line = vim.api.nvim_get_current_line()
+        col = vim.api.nvim_win_get_cursor(0)[2]
+    end
+
+    local before = line:sub(1, col)
+    -- First drop the blanks right before the cursor, then the whole WORD
+    local kept = before:gsub("%s+$", ""):gsub("%S+$", "")
+
+    if #kept == #before then return end
+
+    if in_cmdline then
+        vim.fn.setcmdline(kept .. line:sub(col + 1), #kept + 1)
+    else
+        local row = vim.api.nvim_win_get_cursor(0)[1]
+        vim.api.nvim_set_current_line(kept .. line:sub(col + 1))
+        vim.api.nvim_win_set_cursor(0, { row, #kept })
+    end
 end
 
 return M

@@ -37,16 +37,18 @@ vim.api.nvim_create_autocmd({ "BufWritePre" }, {
     end,
 })
 
--- Prevent duplicate autocommands on reload
-local luasnip_undo_group = vim.api.nvim_create_augroup("LuaSnipUndo", { clear = true })
-
-vim.api.nvim_create_autocmd("User", {
-    pattern = "LuasnipPreExpand",
-    group = luasnip_undo_group,
-    callback = function()
-        -- Break the undo sequence right before the snippet expands
-        local keys = vim.api.nvim_replace_termcodes("<C-g>u", true, true, true)
-        vim.api.nvim_feedkeys(keys, "i", true)
+-- Switch cwd to the Notes folder when opening a file inside it (or a subfolder)
+local notes_dir = vim.fn.expand("~/cloud/Documents/Notes")
+vim.api.nvim_create_autocmd("BufEnter", {
+    group = vim.api.nvim_create_augroup("auto_cd_notes", { clear = true }),
+    callback = function(event)
+        local file = vim.uv.fs_realpath(event.match)
+        if not file then
+            return
+        end
+        if file:sub(1, #notes_dir + 1) == notes_dir .. "/" and vim.uv.cwd() ~= notes_dir then
+            vim.cmd.cd(notes_dir)
+        end
     end,
 })
 
@@ -58,6 +60,19 @@ vim.api.nvim_create_autocmd("ColorScheme", {
         -- Change 'fg' to whatever hex code you prefer
         -- 'bold = true' helps make structure stand out
         vim.api.nvim_set_hl(0, "texCmdEnv", { fg = "#8ec07c", bold = true })
+    end,
+})
+
+-- Prevent duplicate autocommands on reload
+local luasnip_undo_group = vim.api.nvim_create_augroup("LuaSnipUndo", { clear = true })
+
+vim.api.nvim_create_autocmd("User", {
+    pattern = "LuasnipPreExpand",
+    group = luasnip_undo_group,
+    callback = function()
+        -- Break the undo sequence right before the snippet expands
+        local keys = vim.api.nvim_replace_termcodes("<C-g>u", true, true, true)
+        vim.api.nvim_feedkeys(keys, "i", true)
     end,
 })
 
@@ -136,10 +151,17 @@ vim.api.nvim_create_autocmd('DirChangedPre', {
 vim.api.nvim_create_autocmd('DirChanged', {
     callback = function(_)
         fn.rl_terminal_title()
+        fn.set_harpoon_keymaps()
     end,
 })
 
 vim.api.nvim_create_autocmd({ "RecordingEnter", "RecordingLeave" }, {
+    callback = function()
+        require("lualine").refresh()
+    end,
+})
+
+vim.api.nvim_create_autocmd("BufWritePost", {
     callback = function()
         require("lualine").refresh()
     end,
@@ -169,3 +191,34 @@ if vim.env.KITTY_LISTEN_ON then
         end,
     })
 end
+
+-- Flash labels default to Substitute, which gruvbox links to Search:
+-- the same color as the matched words. Give the labels their own color.
+local function set_flash_hl()
+    vim.api.nvim_set_hl(0, "FlashLabel", { fg = "#282828", bg = "#83a598", bold = true })
+end
+
+vim.api.nvim_create_autocmd("ColorScheme", { callback = set_flash_hl })
+set_flash_hl()
+
+-- lualine only queues a refresh on ModeChanged and applies it from a libuv
+-- timer, so the statusline stays stale until the next keypress causes a
+-- redraw: entering visual mode doesn't update the label until you move the
+-- cursor. Apply the refresh synchronously instead.
+vim.api.nvim_create_autocmd("ModeChanged", {
+    callback = function()
+        if not package.loaded["lualine"] then
+            return
+        end
+        require("lualine").refresh({ place = { "statusline" }, force = true })
+        vim.cmd("redrawstatus")
+    end,
+})
+
+-- Highlight for URLs
+vim.api.nvim_create_autocmd({"BufWinEnter", "BufRead"}, {
+  pattern = "*",
+  callback = function()
+    vim.fn.matchadd("Underlined", [[https\?://[^ \t\n]*]])
+  end,
+})

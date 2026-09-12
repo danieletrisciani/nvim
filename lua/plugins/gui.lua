@@ -47,21 +47,32 @@ return {
             local function sessions()
                 local utils = require('session_manager.utils')
                 if not utils.exists_in_session() then
-                    return ""
+                    local file_folder = vim.fn.expand('%:h:t')
+                    return "  " .. file_folder
                 end
 
                 local cwd = vim.fn.getcwd()
                 local last = vim.fn.fnamemodify(cwd, ":t")
-                return last or cwd
+                local name = last or cwd
+                return "  " .. name
             end
             -- Returns the path of the file relative to cwd
             local function file_name()
                 local utils = require('session_manager.utils')
+                local devicons = require('nvim-web-devicons')
+                local name
+
+                -- by filename (more common — resolves extension internally)
                 if not utils.exists_in_session() then
-                    return vim.fn.expand("%:t")
+                    name = vim.fn.expand("%:t")
                 else
-                    return vim.fn.expand("%")
+                    name = vim.fn.fnamemodify(vim.fn.expand("%:p"), ":.")
                 end
+                if vim.bo.modified then
+                    name = name .. " 󱙄 "
+                end
+                local icon, _ = devicons.get_icon_by_filetype(vim.bo.filetype)
+                return icon .. " ".. name
             end
             -- Returns the register letter when recording
             local function recording()
@@ -90,17 +101,64 @@ return {
                 return ''
             end
 
+            -- Darker gruvbox-matched statusline: the mode block uses the
+            -- neutral (dark) palette variants instead of the bright ones,
+            -- b sits on bg0 and c on black. Note z mirrors a and y mirrors b.
+            local theme = {
+                normal = {
+                    a = { fg = "#ebdbb2", bg = "#665c54", gui = "bold" },
+                    b = { fg = "#ebdbb2", bg = "#282828" },
+                    c = { fg = "#a89984", bg = "#000000" },
+                },
+                insert = {
+                    a = { fg = "#1d2021", bg = "#23a3aa", gui = "bold" },
+                    b = { fg = "#ebdbb2", bg = "#282828" },
+                    c = { fg = "#a89984", bg = "#000000" },
+                },
+                visual = {
+                    a = { fg = "#1d2021", bg = "#e45a00", gui = "bold" },
+                    b = { fg = "#ebdbb2", bg = "#282828" },
+                    c = { fg = "#a89984", bg = "#000000" },
+                },
+                replace = {
+                    a = { fg = "#ebdbb2", bg = "#cc241d", gui = "bold" },
+                    b = { fg = "#ebdbb2", bg = "#282828" },
+                    c = { fg = "#a89984", bg = "#000000" },
+                },
+                command = {
+                    a = { fg = "#1d2021", bg = "#d79921", gui = "bold" },
+                    b = { fg = "#ebdbb2", bg = "#282828" },
+                    c = { fg = "#a89984", bg = "#000000" },
+                },
+                inactive = {
+                    a = { fg = "#ebdbb2", bg = "#3c3836", gui = "bold" },
+                    b = { fg = "#a89984", bg = "#282828" },
+                    c = { fg = "#a89984", bg = "#000000" },
+                },
+            }
+
             require("lualine").setup({
                 options = {
-                    theme = "auto",       -- or "gruvbox", "tokyonight", etc.
+                    theme = theme,
                     globalstatus = true,  -- use global statusline
                 },
                 -- disabled_filetypes = {
                 --   statusline = { "tex" },
                 -- },
                 sections = {
-                    lualine_a = { "mode" },
-                    lualine_b = { sessions, file_name },
+                    lualine_a = {
+                        {
+                            "mode",
+                            fmt = function(str)
+                                return ({ ["V-LINE"] = "VL", ["V-BLOCK"] = "VB", ["S-LINE"] = "SL", ["S-BLOCK"] = "SB" })[str]
+                                    or str:sub(1, 1)
+                            end,
+                        },
+                    },
+                    lualine_b = {
+                        sessions,
+                        file_name,
+                    },
                     lualine_c = { },
                     lualine_x = { },
                     lualine_y = {

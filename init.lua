@@ -21,24 +21,18 @@ vim.opt.number = true
 vim.opt.relativenumber = true
 vim.opt.shiftwidth = 2 -- indentation size for >>, <<, autoindent
 vim.opt.scrolloff = 4
+vim.o.breakindent = true -- break indent for wrapped lines
+vim.opt.wrap = false -- disable wrap
+vim.o.undofile = true -- save undo history
+
+-- Case-insensitive searching UNLESS \C or one or more capital letters in terminal
+vim.o.ignorecase = true
+vim.o.smartcase = true
 
 -- Sync clipboard between OS and Neovim.
 vim.schedule(function()
     vim.o.clipboard = 'unnamedplus'
 end)
-
--- Break indent for wrap lines
-vim.o.breakindent = true
-
--- Disable wrap
-vim.opt.wrap = false
-
--- Save undo history
-vim.o.undofile = true
-
--- Case-insensitive searching UNLESS \C or one or more capital letters in terminal
-vim.o.ignorecase = true
-vim.o.smartcase = true
 
 -- Keep signcolumn on by default
 vim.o.signcolumn = 'number'
@@ -50,7 +44,7 @@ vim.o.updatetime = 250
 vim.o.timeoutlen = 300
 
 -- What is saved in a session
-vim.o.sessionoptions = "buffers,curdir,folds,tabpages,winsize,winpos,terminal"
+vim.o.sessionoptions = "buffers,curdir,folds,tabpages,winsize,terminal,help,globals"
 
 -- ignore/auto-skip "ATTENTION" swap file messages
 vim.opt.shortmess:append('A')

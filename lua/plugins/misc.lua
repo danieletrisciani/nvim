@@ -37,9 +37,27 @@ return {
             local Path = require('plenary.path')
             local config = require('session_manager.config')
             local utils = require('session_manager.utils')
+
+            -- `nvim -S file.vim` leaves argc() at 0, so session-manager's own
+            -- autoload guard misses it and the last session gets loaded on top.
+            -- -S is sourced before VimEnter fires, so by autoload time the cwd
+            -- is already the session's folder: load that dir's session instead.
+            local session_file
+            for i, arg in ipairs(vim.v.argv) do
+                if arg == '-S' then
+                    local next_arg = vim.v.argv[i + 1]
+                    local given = (next_arg and next_arg:sub(1, 1) ~= '-') and next_arg or 'Session.vim'
+                    session_file = vim.fn.fnamemodify(given, ':p')
+                    break
+                end
+            end
+            local started_with_session = session_file ~= nil
+
             require('session_manager').setup({
                 sessions_dir = Path:new(vim.fn.stdpath('data'), 'sessions'), -- The directory where the session files will be saved.
-                autoload_mode = { config.AutoloadMode.LastSession },
+                autoload_mode = started_with_session
+                    and { config.AutoloadMode.CurrentDir }
+                    or { config.AutoloadMode.LastSession },
                 autosave_last_session = true, -- Automatically save last session on exit and on session switch.
                 autosave_ignore_not_normal = false, -- Plugin will not save a session when no buffers are opened, or all of them aren't writable or listed.
                 autosave_ignore_dirs = {"~/"}, -- A list of directories where the session will not be autosaved.
@@ -47,14 +65,37 @@ return {
                     'gitcommit',
                     'gitrebase',
                 },
-                autosave_ignore_buftypes = {}, -- All buffers of these types will be closed before the session is saved.
+                autosave_ignore_buftypes = {"kitty-scrollback"}, -- All buffers of these types will be closed before the session is saved.
                 autosave_only_in_session = true, -- Always autosaves session. If true, only autosaves after a session is active.
                 max_path_length = 0,  -- Shorten the display path if length exceeds this threshold. Use 0 if don't want to shorten the path at all.
                 load_include_current = false,  -- The currently loaded session appears in the load_session UI.
             })
-            local dir = config.session_filename_to_dir(utils.get_last_session_filename()).filename
-            -- Harpoon needs this to currently load the file list
-            vim.cmd.cd(dir)
+            if started_with_session then
+                -- If no managed session existed for the folder the -S session
+                -- is still what's loaded, and session-manager won't write it
+                -- back (it derives the autosave name from the cwd). Save it to
+                -- its own file, keeping the plugin's empty-session guard.
+                vim.api.nvim_create_autocmd('VimLeavePre', {
+                    callback = function()
+                        -- A managed session was adopted for this dir, so
+                        -- session-manager autosaves it itself.
+                        if utils.exists_in_session() then
+                            return
+                        end
+                        local filename = vim.v.this_session
+                        if filename == '' then
+                            filename = session_file
+                        end
+                        if filename ~= '' and utils.is_restorable_buffer_present() then
+                            utils.save_session(filename)
+                        end
+                    end,
+                })
+            else
+                local dir = config.session_filename_to_dir(utils.get_last_session_filename()).filename
+                -- Harpoon needs this to currently load the file list
+                vim.cmd.cd(dir)
+            end
         end,
     },
 
@@ -140,5 +181,24 @@ return {
         opts = {
             signs = true
         }
-    }
+    },
+
+    -- lazy.nvim
+    {
+        "chrisgrieser/nvim-early-retirement",
+        config = true,
+        event = "VeryLazy",
+        opts = {
+            retirementAgeMins = 5,
+            ignoreAltFile = true
+        }
+    },
+
+    {
+        "mikesmithgh/kitty-scrollback.nvim",
+        lazy = true,
+        config = function()
+            require("kitty-scrollback").setup()
+        end,
+    },
 }

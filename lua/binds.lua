@@ -85,7 +85,13 @@ vim.keymap.set({'n', 'v'}, '<A-i>', '<c-d>', {desc="Yank whole buffer"})
 vim.keymap.set({'n', 'v'}, '<A-o>', '<c-u>', {desc="Yank whole buffer"})
 
 -- Alt+Backspace to delete a work backward
-vim.keymap.set('i', '<M-BS>', '<C-w>', { desc = 'Delete word backward' })
+vim.keymap.set({'i', 'c'}, '<M-BS>', '<C-w>', { desc = 'Delete word backward' })
+
+-- asd :
+-- Ctrl+Backspace deletes back to the previous space, like dB
+-- (kitty sends <C-BS>, other terminals collapse it to <C-h>)
+vim.keymap.set({'i', 'c'}, '<C-BS>', fn.delete_WORD_backward, { desc = 'Delete WORD backward' })
+vim.keymap.set({'i', 'c'}, '<C-h>', fn.delete_WORD_backward, { desc = 'Delete WORD backward' })
 
 -- Toggle concealing
 vim.keymap.set("n", '<leader>uc', fn.toggle_conceal, { desc = 'Toogle Concealing', })
@@ -117,6 +123,9 @@ vim.keymap.set({'n', 'v'}, '<leader>w', fn.picker_session, {desc="List sessions"
 
 -- Open new terminal tab in same cwd
 vim.keymap.set({'n'}, '<leader>fd', fn.new_tab, {desc="New terminal tab"})
+
+-- Open new terminal tab in same cwd and executed claude --continue
+vim.keymap.set({'n'}, '<leader>fc', fn.open_claude, {desc="Open Claude"})
 
 -- Obsidian binds
 vim.keymap.set('n', '<leader>oo', '<cmd>Obsidian quick_switch<cr>', {desc="Find note"} )

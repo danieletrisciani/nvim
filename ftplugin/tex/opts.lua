@@ -17,5 +17,8 @@ vim.wo.conceallevel = 0
 vim.opt_local.concealcursor = ''
 
 -- Highlights
-vim.api.nvim_set_hl(0, "texError", { fg = "#000000" })
+-- vimtex flags a bare _ or ^ outside math as texError. Painting it black made
+-- those characters invisible against the background, so mute the error
+-- highlight by rendering it as ordinary text instead.
+vim.api.nvim_set_hl(0, "texError", { link = "Normal" })
 

@@ -131,3 +131,61 @@ vim.keymap.set('n', '<leader>lp', clip_pdf, {
 vim.keymap.set('n', '<leader>lf', function()
   vim.fn['vimtex#fzf#run']()
 end, { silent = true })
+
+-- vimtex's #X and `X insert maps only ever expand inside math mode (they all
+-- go through vimtex#syntax#in_mathzone), but the mappings exist everywhere.
+-- So a literal # or ` typed in text mode stalls for 'timeoutlen' while Neovim
+-- waits to see whether a second key follows. Keep every mapping, but only
+-- install them while the cursor is actually in a math zone.
+local buf = vim.api.nvim_get_current_buf()
+vim.schedule(function()
+    if not vim.api.nvim_buf_is_valid(buf) then
+        return
+    end
+
+    local saved = {}
+    for _, map in ipairs(vim.api.nvim_buf_get_keymap(buf, 'i')) do
+        local leader = map.lhs:sub(1, 1)
+        if (leader == '#' or leader == '`') and #map.lhs > 1 then
+            saved[#saved + 1] = vim.fn.maparg(map.lhs, 'i', false, true)
+        end
+    end
+    if #saved == 0 then
+        return
+    end
+
+    -- The maps only exist while in math mode, so `:imap #` from normal mode
+    -- finds nothing. Keep the captured list inspectable:
+    --   :lua =vim.tbl_map(function(m) return m.lhs end, vim.b.math_imaps)
+    vim.b[buf].math_imaps = saved
+
+    local installed = true
+    local function install(want)
+        if want == installed then
+            return
+        end
+        for _, map in ipairs(saved) do
+            if want then
+                vim.fn.mapset('i', false, map)
+            else
+                pcall(vim.keymap.del, 'i', map.lhs, { buffer = buf })
+            end
+        end
+        installed = want
+    end
+
+    install(false)
+
+    vim.api.nvim_create_autocmd({ 'InsertEnter', 'CursorMovedI' }, {
+        buffer = buf,
+        callback = function()
+            install(vim.fn['vimtex#syntax#in_mathzone']() == 1)
+        end,
+    })
+    vim.api.nvim_create_autocmd('InsertLeave', {
+        buffer = buf,
+        callback = function()
+            install(false)
+        end,
+    })
+end)
