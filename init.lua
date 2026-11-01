@@ -5,6 +5,8 @@ vim.api.nvim_create_user_command("Hig", hitex, {})
 
 -- Cursor settings. This enables the cursor blinking in every mode.
 vim.opt.guicursor = "n-v-c-sm:block-Cursor,i-ci-ve:ver25-Cursor,r-cr-o:hor20-Cursor,t:block-TermCursor,a:blinkwait500-blinkoff500-blinkon500"
+-- Highlight the whole line under the cursor.
+vim.opt.cursorline = true
 
 ---- START OF init.lua ----
 -- User defined global variables --
@@ -92,6 +94,9 @@ vim.cmd("colorscheme gruvbox")
 
 -- Set the cursor color to red
 vim.api.nvim_set_hl(0, "Cursor", { bg = "#cc6666", fg = "#000000" })
+
+-- Subtle current-line highlight, close to the black terminal background
+vim.api.nvim_set_hl(0, "CursorLine", { bg = "#141414" })
 
 -- Adds a colored line after the context line
 vim.cmd([[
