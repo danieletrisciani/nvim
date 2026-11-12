@@ -106,31 +106,6 @@ return {
         config = true,
     },
 
-    -- The Obsidian plugin for neovim
-    {
-      "obsidian-nvim/obsidian.nvim",
-      version = "*", -- use latest release, remove to use latest commit
-      ---@module 'obsidian'
-      ---@type obsidian.config
-      opts = {
-        legacy_commands = false, -- this will be removed in 4.0.0
-        workspaces = {
-          {
-            name = "notes",
-            path = "~/cloud/Documents/Notes",
-          },
-        },
-        picker = {
-          name = "snacks.picker",
-        },
-      },
-    },
-    -- fzf search. This is used mainly by vimtex toc search.
-    {
-      'junegunn/fzf.vim',
-      dependencies = { 'junegunn/fzf' },
-    },
-
     -- automatic list continuation/renumbering for markdown
     {
         "gaoDean/autolist.nvim",
@@ -201,5 +176,11 @@ return {
         config = function()
             require("kitty-scrollback").setup()
         end,
+    },
+    -- fzf search. This is used mainly by vimtex toc search.
+
+    {
+        'junegunn/fzf.vim',
+        dependencies = { 'junegunn/fzf' },
     },
 }
